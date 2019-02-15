@@ -46,7 +46,6 @@ def main(standard_screen):
         name="Game Loop",
         daemon=True)
     thread_game.start()
-
     client.finished.wait()
     exit(0)
 

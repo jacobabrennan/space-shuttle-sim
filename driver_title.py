@@ -20,6 +20,10 @@ class Title(Driver):
         super().__init__()
         self.star_field()
         self.graphic = False
+        self.min_x = 80
+        self.max_x = 0
+        self.min_y = 80
+        self.max_y = 0
 
     # - Interaction ----------------------------------
     def command(self, which):
@@ -28,6 +32,8 @@ class Title(Driver):
         if(block):
             return block
         # Handle Start Game
+        
+        print(self.min_x, self.min_y, self.max_x, self.max_y)
         if(which is COMMAND_PRIMARY):
             self.new_game()
 
@@ -61,6 +67,10 @@ class Title(Driver):
             screen.addstr(line_pos, 20, line, curses.A_BOLD)
             line_pos += 1
         screen.addstr(
+            line_pos,
+            int((window_width-len(press_space))/2),
+            ''.join([" " for char in press_space]))
+        screen.addstr(
             line_pos+1,
             int((window_width-len(press_space))/2),
             press_space)
@@ -69,30 +79,33 @@ class Title(Driver):
 
     class Star:
         def __init__(self):
-            self.x = random.random()
-            self.y = random.random()
-            self.z = 0
+            self.x = random.random() - 1/2
+            self.y = random.random() - 1/2
+            self.z = 1
 
     def star_field(self):
         self.stars = []
         for index in range(1, 100):
             new_star = self.Star()
-            new_star.z = random.randint(0, 20*7)
+            new_star.z = random.random()*1
             self.stars.append(new_star)
 
     def star_advance(self, screen):
         old_stars = list(self.stars)
         for star in old_stars:
-            star.z += 1
-            display_z = star.z / 20
-            display_x = star.x - 0.5
-            display_x *= 40 + (display_z**2)*40
-            display_x = int(display_x + 40)
-            display_y = star.y - 0.5
-            display_y *= 12 + (display_z**2)*12
-            display_y = int(display_y + 12)
+            display_x = star.x / star.z
+            display_x = (display_x + 1/2) * SCREEN_SIZE_WIDTH
+            display_x = int(display_x)
+            display_y = star.y / star.z
+            display_y = (display_y + 1/2) * SCREEN_SIZE_HEIGHT
+            display_y = int(display_y)
+            star.z -= 0.03
+            self.max_x = max(self.max_x, display_x)
+            self.max_y = max(self.max_y, display_y)
+            self.min_x = min(self.min_x, display_x)
+            self.min_y = min(self.min_y, display_y)
             if(
-                    # display_z >= 1 or
+                    star.z <= 0 or
                     display_y >= 24 or
                     display_y < 0 or
                     display_x < 0 or
@@ -101,12 +114,14 @@ class Title(Driver):
                 self.stars.append(self.Star())
             else:
                 graphic = "*"
-                if(display_z < 2):
+                delta = max(abs(star.x), abs(star.y))
+                style = curses.A_NORMAL
+                if(delta > 1/8 or star.z > 1.5):
                     graphic = '·'
-                elif(display_z < 4):
+                elif(star.z > 1/3):
                     graphic = '•'
                 else:
-                    graphic = '*'
+                    graphic = "@"
                 if(self.graphic):
                     graphic = self.graphic
-                screen.addstr(int(display_y), int(display_x), graphic)
+                screen.addstr(int(display_y), int(display_x), graphic, style)
