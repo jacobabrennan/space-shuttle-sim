@@ -46,11 +46,12 @@ class Client(Driver):
 
         def input_loop(screen):
             while(True):
+                # Get character code from player
                 key_code = screen.getch()
+                # Handle "quit" code (Ctrl+C)
                 if(key_code is WINDOWS_INTERRUPT):
                     self.finished.set()
-                else:
-                    print(F'Code: {key_code}')
+                # Translate code into Command, and execute
                 self.last_command = chr(key_code)
                 if(key_code in KEY_BINDINGS):
                     self.command(KEY_BINDINGS[key_code])

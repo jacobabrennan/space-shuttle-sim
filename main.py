@@ -26,26 +26,7 @@ def main(standard_screen):
     standard_screen.keypad(True)  # Enable use of arrow keys
     # Create Client and Game
     client = get_client(standard_screen)
-    game = get_game()
-
-    # Setup Game Thread
-    def game_loop():
-        while(True):
-            # Get commands from client
-            client_command = client.key_command
-            client.key_clear()
-            # Do game logic
-            game.iterate(client_command)
-            # Draw Display
-            client.display(standard_screen)
-            # Sleep
-            time.sleep(TIME_GAME_TICK)
-
-    thread_game = threading.Thread(
-        target=game_loop,
-        name="Game Loop",
-        daemon=True)
-    thread_game.start()
+    game = get_game(standard_screen)
     client.finished.wait()
     exit(0)
 
