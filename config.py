@@ -5,6 +5,7 @@
 # - Screen (shell) metrics -----------------------
 SCREEN_SIZE_WIDTH = 80
 SCREEN_SIZE_HEIGHT = 24
+WINDOWS_INTERRUPT = 3
 
 # - Player command codes -------------------------
 COMMAND_UP = 1

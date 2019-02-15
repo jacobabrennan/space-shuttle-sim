@@ -27,24 +27,28 @@ def main(standard_screen):
     # Create Client and Game
     client = get_client(standard_screen)
     game = get_game()
-    # Start Game
-    timer = 0
-    while timer < 300:
-        # Get commands from client
-        client_command = client.key_command
-        client.key_clear()
-        # Do game logic
-        game.iterate(client_command)
-        # Draw Display
-        client.display(standard_screen)
-        # Sleep
-        time.sleep(TIME_GAME_TICK)
-        timer += 1
+
+    # Setup Game Thread
+    def game_loop():
+        while(True):
+            # Get commands from client
+            client_command = client.key_command
+            client.key_clear()
+            # Do game logic
+            game.iterate(client_command)
+            # Draw Display
+            client.display(standard_screen)
+            # Sleep
+            time.sleep(TIME_GAME_TICK)
+
+    thread_game = threading.Thread(
+        target=game_loop,
+        name="Game Loop",
+        daemon=True)
+    thread_game.start()
+
+    client.finished.wait()
     exit(0)
 
 # - Start Main ---------------------------------------
 curses.wrapper(main)
-
-"""
-py desktop/cursed/main.py
-"""

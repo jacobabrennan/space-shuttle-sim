@@ -42,10 +42,15 @@ class Client(Driver):
         # Show Title
         self.focus(Title())
         # Setup Input Thread
+        self.finished = threading.Event()
 
         def input_loop(screen):
             while(True):
                 key_code = screen.getch()
+                if(key_code is WINDOWS_INTERRUPT):
+                    self.finished.set()
+                else:
+                    print(F'Code: {key_code}')
                 self.last_command = chr(key_code)
                 if(key_code in KEY_BINDINGS):
                     self.command(KEY_BINDINGS[key_code])
@@ -68,7 +73,6 @@ class Client(Driver):
     def display(self, screen, **options):
         screen.clear()
         # Do own drawing first, then draw children on top
-        screen.addstr(0, 0, F'Working')
         # Draw Children
         result = super().display(screen, **options)
         # Write buffer to screen

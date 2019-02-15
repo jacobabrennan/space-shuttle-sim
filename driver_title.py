@@ -14,7 +14,7 @@ from driver_gameplay import Gameplay
 
 
 class Title(Driver):
-    
+
     # - Initialization -------------------------------
     def __init__(self):
         super().__init__()
@@ -110,4 +110,3 @@ class Title(Driver):
                 if(self.graphic):
                     graphic = self.graphic
                 screen.addstr(int(display_y), int(display_x), graphic)
-

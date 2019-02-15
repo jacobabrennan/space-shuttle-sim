@@ -42,5 +42,3 @@ class Game:
         #     for posX = 0 to SCREEN_SIZE_WIDTH-1:
         #         compound_index = posY*SCREEN_SIZE_WIDTH + posX
         #         tile
-            
-        this.map.length
