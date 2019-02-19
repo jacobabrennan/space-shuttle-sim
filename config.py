@@ -3,7 +3,7 @@
 # = Project Constants =========================================================
 
 # - Dependencies ---------------------------------
-# Language Modules
+# Python Modules
 import math
 
 # - Notes ----------------------------------------
@@ -36,23 +36,51 @@ MEGA = 1000*KILO
 GIGA = 1000*MEGA
 
 
-# - Positions and Vectors ------------------------
-def vector_between(S, E):
-    """Calculates the vector between S and E (start and end)."""
-    return (E[0]-S[0], E[1]-S[1], E[2]-S[2])
-
-
-def distance(S, E):
-    """Calculates the distance between S and E (start and end)."""
-    return math.sqrt((E[0]-S[0])**2 + (E[1]-S[1])**2 + (E[2]-S[2])**2)
-
-
-def magnitude(V):
-    """Calculates the magnitude of a given vector."""
-    return math.sqrt(V[0]**2 + V[1]**2 + V[2]**2)
-
-
 # - Messages and Strings -------------------------
 MESSAGE_SCREEN_SIZE_CONDITION_NOT_MET = (
     F'Cannot start engine. Screen must be at least {SCREEN_SIZE_WIDTH} '
     F'characters wide and {SCREEN_SIZE_HEIGHT} high.')
+
+
+# - Positions and Vectors ------------------------
+def unit_vector(V):
+    """Calculates a vector of magnitude 1 in the direction of vector V."""
+    return scale_vector_3d(V, 1/magnitude_3d(V))
+
+
+def vector_between_3d(S, E):
+    """Calculates the vector between S and E (start and end)."""
+    return (E[0]-S[0], E[1]-S[1], E[2]-S[2])
+
+
+def distance_3d(S, E):
+    """Calculates the distance between S and E (start and end)."""
+    return math.sqrt((E[0]-S[0])**2 + (E[1]-S[1])**2 + (E[2]-S[2])**2)
+
+
+def magnitude_3d(V):
+    """Calculates the magnitude of a given vector."""
+    return math.sqrt(V[0]**2 + V[1]**2 + V[2]**2)
+
+
+def scale_vector_3d(V, scale):
+    """Scales vector V by the scalar scale."""
+    return (V[0]*scale, V[1]*scale, V[2]*scale)
+
+
+def scalar_product_3d(A, B):
+    """Calculates the scalar product (dot product) of vectors A and B."""
+    return A[0]*B[0] + A[1]*B[1] + A[2]*B[2]
+
+
+def scalar_projection_3d(A, B):
+    """Calculates the scalar projection of A onto B."""
+    return scalar_product_3d(A, U) / magnitude_3d(B)
+
+
+def vector_projection_3d(A, B):
+    """Calculates the vector projection of A onto B."""
+    return scale_vector_3d(
+        unit_vector(A),
+        scalar_projection_3d(A, B),
+    )

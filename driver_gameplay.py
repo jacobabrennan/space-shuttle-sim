@@ -21,7 +21,7 @@ class Gameplay(Driver):
     # - Interaction ----------------------------------
 
     # - Display Functions ----------------------------
-    def display(self, screen, **options):
+    def display(self, screen, viewpoint, orientation, particles):
         #
         the_client = client.get_client()
         command = the_client.last_command
@@ -29,3 +29,5 @@ class Gameplay(Driver):
         screen.addstr(0, 0, "Gameplay Screen")
         screen.addstr(11, 28, F'Random Integer: {random.randint(1000,9999)}')
         screen.addstr(13, 28, F'Last Client Command: {command}')
+        # Show all particles
+        for particle in particles:

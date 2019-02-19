@@ -44,7 +44,10 @@ class Game:
                 # Do game logic
                 self.iterate(client_command)
                 # Draw Display
-                client.display(screen)
+                client.display(
+                    screen,
+                    self.ship.position, self.ship.orientation, self.particles,
+                )
                 # Sleep
                 time.sleep(TIME_GAME_TICK)
 
@@ -73,11 +76,11 @@ class Game:
         #         compound_index = posY*SCREEN_SIZE_WIDTH + posX
         #         tile
         # Populate cosmos
+        self.ship = Vehicle()
         self.particles = []
         for I in range(0, 500):
             position = (random()*40*AU, random()*40*AU, random()*40*AU)
             new_particle = Particle(position, random()*10*KILO)
             self.particles.append(new_particle)
         # Create player Spaceship
-        ship = Vehicle()
         self.particles.append()

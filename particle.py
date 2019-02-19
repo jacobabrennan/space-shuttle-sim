@@ -18,10 +18,16 @@ class Particle:
             self.position = (0, 0, 0)
         radius = radius
 
-    def graphic(viewpoint):
-        view_vector = vector_between(viewpoint, self.position)
-        view_distance = magnitude(view_vector)
+    def graphic(self, viewpoint, orientation):
+        # view_vector = vector_between(viewpoint, self.position)
+        # view_distance = magnitude(view_vector)
+        orientation_distance = scalar_projection_3d(
+            vector_between_3d(viewpoint, self.position),
+            orientation,
+        )
+        reference_point = scale_vector_3d(orientation, orientation_distance)
+        orthogonal_distance = distance_3d(self.position, reference_point)
         return '@'
 
-    def take_turn(game_time):
+    def take_turn(self, game_time):
         pass

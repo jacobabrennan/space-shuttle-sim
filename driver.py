@@ -59,7 +59,7 @@ class Driver:
             return False
         return self.current_focus.command(which)
 
-    def display(self, screen, **options):
+    def display(self, screen, *args):
         """
         A hook for subclasses to extend to display output to the player.
         Subclasses must call the super in order to allow children to draw.
@@ -70,4 +70,4 @@ class Driver:
         # By default, do nothing except draw focused child
         if(not self.current_focus):
             return False
-        return self.current_focus.display(screen, **options)
+        return self.current_focus.display(screen, *args)

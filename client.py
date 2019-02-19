@@ -71,11 +71,11 @@ class Client(Driver):
         self.key_command = None
 
     # - Display --------------------------------------
-    def display(self, screen, **options):
+    def display(self, screen, *args):
         screen.clear()
         # Do own drawing first, then draw children on top
         # Draw Children
-        result = super().display(screen, **options)
+        result = super().display(screen, *args)
         # Write buffer to screen
         screen.refresh()
         return result

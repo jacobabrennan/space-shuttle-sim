@@ -42,9 +42,9 @@ class Title(Driver):
         the_client.focus(Gameplay())
 
     # - Display --------------------------------------
-    def display(self, screen, **options):
+    def display(self, screen, *args):
         # Check for blocking children
-        block = super().display(screen, **options)
+        block = super().display(screen, *args)
         if(block):
             return block
         # Display Animated Star Field
