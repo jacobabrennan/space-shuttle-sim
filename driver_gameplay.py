@@ -21,7 +21,7 @@ class Gameplay(Driver):
     # - Interaction ----------------------------------
 
     # - Display Functions ----------------------------
-    def display(self, screen, viewpoint, orientation, particles):
+    def display(self, screen, viewpoint, bearing, particles):
         #
         the_client = client.get_client()
         command = the_client.last_command

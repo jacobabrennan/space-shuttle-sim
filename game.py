@@ -46,7 +46,7 @@ class Game:
                 # Draw Display
                 client.display(
                     screen,
-                    self.ship.position, self.ship.orientation, self.particles,
+                    self.ship.position, self.ship.bearing, self.particles,
                 )
                 # Sleep
                 time.sleep(TIME_GAME_TICK)
