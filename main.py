@@ -17,7 +17,7 @@ from game import get_game
 def main(standard_screen):
     # Determine if shell is configured properly to play
     size = standard_screen.getmaxyx()
-    if(size[1] < SCREEN_SIZE_WIDTH or size[0] < SCREEN_SIZE_HEIGHT):
+    if(size[1] < SCREEN_CHARACTER_WIDTH or size[0] < SCREEN_CHARACTER_HEIGHT):
         print(MESSAGE_SCREEN_SIZE_CONDITION_NOT_MET)
         exit(1)
     # Configure Curses (shell display)
@@ -27,8 +27,7 @@ def main(standard_screen):
     # Create Client and Game
     client = get_client(standard_screen)
     game = get_game(standard_screen)
-    # client.finished.wait()
-    time.sleep(10)
+    client.finished.wait()
     exit(0)
 
 # - Start Main ---------------------------------------

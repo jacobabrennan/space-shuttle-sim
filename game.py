@@ -7,10 +7,12 @@
 import threading
 import array
 import threading
+import math
 import time
 from random import random
 # Local Modules
 from config import *
+from vector3d import *
 import client
 from particle import Particle
 from vehicle import Vehicle
@@ -59,31 +61,46 @@ class Game:
         if(self.time is None):
             return
         self.time += 1
+        #
+        S = self.ship
+        turn_rate = 50
+        if(player_command == COMMAND_UP):
+            S.pitch(math.pi/turn_rate)
+            S.velocity = scale_vector(S.bearing, magnitude(S.velocity))
+        elif(player_command == COMMAND_DOWN):
+            S.pitch(-math.pi/turn_rate)
+            S.velocity = scale_vector(S.bearing, magnitude(S.velocity))
+        elif(player_command == COMMAND_LEFT):
+            S.yaw(math.pi/turn_rate)
+            S.velocity = scale_vector(S.bearing, magnitude(S.velocity))
+        elif(player_command == COMMAND_RIGHT):
+            S.yaw(-math.pi/turn_rate)
+            S.velocity = scale_vector(S.bearing, magnitude(S.velocity))
+        elif(player_command == COMMAND_ROLL_RIGHT):
+            S.roll(-math.pi/turn_rate)
+            S.velocity = scale_vector(S.bearing, magnitude(S.velocity))
+        elif(player_command == COMMAND_ROLL_LEFT):
+            S.roll(math.pi/turn_rate)
+            S.velocity = scale_vector(S.bearing, magnitude(S.velocity))
         # Move all particles
         for particle in self.particles:
             particle.take_turn(self.time)
 
     def start(self):
         self.time = 0
-        # Populate map as a grid of tile ids
-        # self.tile_grid = array.array('B')
-        # for index in range(0, (SCREEN_SIZE_HEIGHT * SCREEN_SIZE_WIDTH)-1):
-        #     self.tile_grid.append(0)
-        # for posY = 0 to SCREEN_SIZE_HEIGHT-1:
-        #     for posX = 0 to SCREEN_SIZE_WIDTH-1:
-        #         compound_index = posY*SCREEN_SIZE_WIDTH + posX
-        #         tile
         # Populate cosmos
         self.ship = Vehicle()
-        self.ship.velocity = (0, 0, AU/20)
+        self.ship.velocity = (0, 0, AU/100)#/KILO)
         self.particles = []
-        for I in range(0, 500):
+        for I in range(0, 50):
             position = (
                 (random()-1/2) * 40*AU,
                 (random()-1/2) * 40*AU,
                 (random()-1/2) * 40*AU,
             )
-            new_particle = Particle(position, random()*10*KILO)
+            new_particle = Particle(position, random()*695000*KILO)
             self.particles.append(new_particle)
+        new_particle = Particle((0,0,GIGA), random()*695000*KILO)
+        self.particles.append(new_particle)
         # Create player Spaceship
         self.particles.append(self.ship)

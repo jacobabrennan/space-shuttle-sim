@@ -45,8 +45,13 @@ class Gameplay(Driver):
             graphic = particle.graphic(viewpoint, bearing, attitude, starboard)
             if(graphic is None):
                 continue
-            display_x = int(graphic[1][0])
-            display_y = int(graphic[1][1])
+            display_x = graphic[1][0]
+            display_y = graphic[1][1]*-1
+            display_x += SCREEN_PHYSICAL_WIDTH/2
+            display_y += SCREEN_PHYSICAL_HEIGHT/2
+            display_x *= SCREEN_CHARACTER_WIDTH / SCREEN_PHYSICAL_WIDTH
+            display_y *= SCREEN_CHARACTER_HEIGHT / SCREEN_PHYSICAL_HEIGHT
+            #
             if(min_x is None or min_x > display_x):
                 min_x = display_x
             if(max_x is None or max_x < display_x):
@@ -61,6 +66,4 @@ class Gameplay(Driver):
                     display_x < 0 or
                     display_x >= 79):
                 continue
-            screen.addstr(display_y, display_x, graphic[0])
-        screen.addstr(12, 0, F'X: [{min_x}, {max_x}]')
-        screen.addstr(13, 0, F'Y: [{min_y}, {max_y}]')
+            screen.addstr(int(display_y), int(display_x), graphic[0])

@@ -17,6 +17,12 @@ KEY_BINDINGS = {
     curses.KEY_DOWN: COMMAND_DOWN,
     curses.KEY_RIGHT: COMMAND_RIGHT,
     curses.KEY_LEFT: COMMAND_LEFT,
+    ord('w'): COMMAND_UP,
+    ord('s'): COMMAND_DOWN,
+    ord('d'): COMMAND_RIGHT,
+    ord('a'): COMMAND_LEFT,
+    ord('e'): COMMAND_ROLL_RIGHT,
+    ord('q'): COMMAND_ROLL_LEFT,
     ord(' '): COMMAND_PRIMARY,
 }
 

@@ -13,7 +13,7 @@ from particle import Particle
 
 class Vehicle(Particle):
 
-    def __init__(self, position=(1, 1, 1)):
+    def __init__(self, position=(0, 0, 0)):
         super().__init__(position)
         # By default, the vehicle is stationary, facing forward, and upright.
         self.velocity = (0, 0, 0)
@@ -31,6 +31,7 @@ class Vehicle(Particle):
             scale_vector(self.bearing, math.cos(radians+math.pi/2)),
             scale_vector(self.attitude, math.sin(radians+math.pi/2)),
         )
+        self.bearing = new_bearing
 
     def yaw(self, radians):
         """Adjusts bearing & attitude by rotating about the Y/vertical axis."""

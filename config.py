@@ -14,15 +14,21 @@
 
 
 # - Screen (shell) metrics -----------------------
-SCREEN_SIZE_WIDTH = 80
-SCREEN_SIZE_HEIGHT = 24
 WINDOWS_INTERRUPT = 3
+SCREEN_CHARACTER_WIDTH = 80
+SCREEN_CHARACTER_HEIGHT = 24
+SCREEN_PIXEL_WIDTH = 640
+SCREEN_PIXEL_HEIGHT = 288
+SCREEN_PHYSICAL_WIDTH = 2
+SCREEN_PHYSICAL_HEIGHT = 0.9
 
 # - Player command codes -------------------------
 COMMAND_UP = 1
 COMMAND_DOWN = 2
 COMMAND_RIGHT = 4
 COMMAND_LEFT = 8
+COMMAND_ROLL_RIGHT = 16
+COMMAND_ROLL_LEFT = 32
 COMMAND_PRIMARY = 64
 
 # - Timing and delays ----------------------------
@@ -38,5 +44,5 @@ GIGA = 1000*MEGA
 
 # - Messages and Strings -------------------------
 MESSAGE_SCREEN_SIZE_CONDITION_NOT_MET = (
-    F'Cannot start engine. Screen must be at least {SCREEN_SIZE_WIDTH} '
-    F'characters wide and {SCREEN_SIZE_HEIGHT} high.')
+    F'Cannot start engine. Screen must be at least {SCREEN_CHARACTER_WIDTH} '
+    F'characters wide and {SCREEN_CHARACTER_HEIGHT} high.')

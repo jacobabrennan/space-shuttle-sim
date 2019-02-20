@@ -91,10 +91,10 @@ class Title(Driver):
         old_stars = list(self.stars)
         for star in old_stars:
             display_x = star.x / star.z
-            display_x = (display_x + 1/2) * SCREEN_SIZE_WIDTH
+            display_x = (display_x + 1/2) * SCREEN_CHARACTER_WIDTH
             display_x = int(display_x)
             display_y = star.y / star.z
-            display_y = (display_y + 1/2) * SCREEN_SIZE_HEIGHT
+            display_y = (display_y + 1/2) * SCREEN_CHARACTER_HEIGHT
             display_y = int(display_y)
             star.z -= 0.03
             if(
