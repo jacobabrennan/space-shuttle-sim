@@ -41,10 +41,20 @@ class Gameplay(Driver):
         min_y = None
         max_x = None
         max_y = None
+        # Get and sort graphics for all particles
+        graphics = []
         for particle in particles:
+            # Calculate graphic
             graphic = particle.graphic(viewpoint, bearing, attitude, starboard)
+            # Skip if particle is behind viewpoint
             if(graphic is None):
                 continue
+            # Add to list
+            graphics.append(graphic)
+        # Sort list by distance, farthest first
+        graphics.sort(key=lambda graphic: -graphic[1][2])
+        # Display all graphics
+        for graphic in graphics:
             display_x = graphic[1][0]
             display_y = graphic[1][1]*-1
             display_x += SCREEN_PHYSICAL_WIDTH/2

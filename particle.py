@@ -37,6 +37,7 @@ class Particle:
         display_position = (
             relative_position[0]*scale,
             relative_position[1]*scale,
+            relative_position[2],
         )
         apparent_size = scale * self.radius * 2
         pixel_size = apparent_size * SCREEN_PIXEL_WIDTH/SCREEN_PHYSICAL_WIDTH
@@ -49,8 +50,10 @@ class Particle:
         elif(pixel_size >= 4):
             graphic = '•'
             # °*+@Oo©®
-        elif(pixel_size >= 3 and random.random() < 1/8):
+        elif(pixel_size >= 3/4 and random.random() < 1/8):
             graphic = random.choice(('+', '×'))
+        # elif(pixel_size >= 1/50):
+        #     graphic = '·'
         else:
             graphic = '·'
         #

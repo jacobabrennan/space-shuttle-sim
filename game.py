@@ -63,7 +63,7 @@ class Game:
         self.time += 1
         #
         S = self.ship
-        turn_rate = 50
+        turn_rate = 100
         if(player_command == COMMAND_UP):
             S.pitch(math.pi/turn_rate)
             S.velocity = scale_vector(S.bearing, magnitude(S.velocity))
@@ -92,7 +92,7 @@ class Game:
         self.ship = Vehicle()
         self.ship.velocity = (0, 0, AU/100)#/KILO)
         self.particles = []
-        for I in range(0, 50):
+        for I in range(0, 5000):
             position = (
                 (random()-1/2) * 40*AU,
                 (random()-1/2) * 40*AU,
@@ -100,7 +100,7 @@ class Game:
             )
             new_particle = Particle(position, random()*695000*KILO)
             self.particles.append(new_particle)
-        new_particle = Particle((0,0,GIGA), random()*695000*KILO)
+        new_particle = Particle((4*GIGA, 1*GIGA, AU), random()*695000*KILO)
         self.particles.append(new_particle)
         # Create player Spaceship
         self.particles.append(self.ship)
