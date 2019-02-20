@@ -23,24 +23,21 @@ class Gameplay(Driver):
     # - Interaction ----------------------------------
 
     # - Display Functions ----------------------------
+    def graphic_sort(self, graphic):
+        """Sort graphic drawing order. Used by self.display."""
+        return -graphic[1][2]
+    
     def display(self, screen):
-        screen.addstr(0, 0, "Gameplay Screen")
-        # screen.addstr(11, 28, F'Random Integer: {random.randint(1000,9999)}')
-        # screen.addstr(13, 28, F'Last Client Command: {command}')
-        #
+        """Displays the game state on the screen."""
+        # Cancel if no camera is available
         if(self.game.ship is None):
             return
-        #
+        # Get cosmos data from game
         viewpoint = self.game.ship.position
         bearing = self.game.ship.bearing
         attitude = self.game.ship.attitude
         starboard = vector_product(bearing, attitude)
-        # Show all particles
         particles = self.game.particles
-        min_x = None
-        min_y = None
-        max_x = None
-        max_y = None
         # Get and sort graphics for all particles
         graphics = []
         for particle in particles:
@@ -52,28 +49,22 @@ class Gameplay(Driver):
             # Add to list
             graphics.append(graphic)
         # Sort list by distance, farthest first
-        graphics.sort(key=lambda graphic: -graphic[1][2])
+        graphics.sort(key=self.graphic_sort)
         # Display all graphics
         for graphic in graphics:
+            # Center and scale graphic on screen
             display_x = graphic[1][0]
             display_y = graphic[1][1]*-1
             display_x += SCREEN_PHYSICAL_WIDTH/2
             display_y += SCREEN_PHYSICAL_HEIGHT/2
             display_x *= SCREEN_CHARACTER_WIDTH / SCREEN_PHYSICAL_WIDTH
             display_y *= SCREEN_CHARACTER_HEIGHT / SCREEN_PHYSICAL_HEIGHT
-            #
-            if(min_x is None or min_x > display_x):
-                min_x = display_x
-            if(max_x is None or max_x < display_x):
-                max_x = display_x
-            if(min_y is None or min_y > display_y):
-                min_y = display_y
-            if(max_y is None or max_y < display_y):
-                max_y = display_y
+            # Discard graphics outside of screen
             if(
                     display_y >= 24 or
                     display_y < 0 or
                     display_x < 0 or
                     display_x >= 79):
                 continue
+            # Draw graphic
             screen.addstr(int(display_y), int(display_x), graphic[0])
