@@ -46,7 +46,7 @@ def scalar_product(A, B):
 
 def vector_product(A, B):
     """Calculates the vector product (cross product) of vectors A and B."""
-    return (A[2]*B[3]-A[3]*B[2], A[3]*B[1]-A[1]*B[3], A[1]*B[2]-A[2]*B[1])
+    return (A[1]*B[2]-A[2]*B[1], A[2]*B[0]-A[0]*B[2], A[0]*B[1]-A[1]*B[0])
 
 
 def scalar_projection(A, B):

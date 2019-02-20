@@ -13,7 +13,7 @@ from particle import Particle
 
 class Vehicle(Particle):
 
-    def init(self, position):
+    def __init__(self, position=(1, 1, 1)):
         super().__init__(position)
         # By default, the vehicle is stationary, facing forward, and upright.
         self.velocity = (0, 0, 0)
@@ -28,31 +28,31 @@ class Vehicle(Particle):
             scale_vector(self.attitude, math.sin(radians)),
         )
         self.attitude = vector_addition(
-            scale_vector(self.bearing, math.cos(radians+math.pi/4)),
-            scale_vector(self.attitude, math.sin(radians+math.pi/4)),
+            scale_vector(self.bearing, math.cos(radians+math.pi/2)),
+            scale_vector(self.attitude, math.sin(radians+math.pi/2)),
         )
 
     def yaw(self, radians):
         """Adjusts bearing & attitude by rotating about the Y/vertical axis."""
         starboard = vector_product(self.bearing, self.attitude)
         self.bearing = vector_addition(
-            scale_vector(starboard, math.cos(radians+math.pi/4)),
-            scale_vector(self.bearing, math.sin(radians+math.pi/4)),
+            scale_vector(starboard, math.cos(radians+math.pi/2)),
+            scale_vector(self.bearing, math.sin(radians+math.pi/2)),
         )
 
     def roll(self, radians):
         """Adjusts bearing & attitude by rotating about the Z/forward axis."""
         starboard = vector_product(self.bearing, self.attitude)
         self.attitude = vector_addition(
-            scale_vector(starboard, math.cos(radians+math.pi/4)),
-            scale_vector(self.attitude, math.sin(radians+math.pi/4)),
+            scale_vector(starboard, math.cos(radians+math.pi/2)),
+            scale_vector(self.attitude, math.sin(radians+math.pi/2)),
         )
 
     # def graphic(viewpoint, ):
     #     distance = math.sqrt(x**2 + y**2 + z**2)
     #     return '#'
 
-    def take_turn(self):
+    def take_turn(self, game_time):
         # Apply rotations
         if(self.angular_velocity[0]):
             self.pitch(self.angular_velocity[0])

@@ -11,6 +11,7 @@ from config import *
 from driver import Driver
 import client
 from driver_gameplay import Gameplay
+import game
 
 
 class Title(Driver):
@@ -20,10 +21,6 @@ class Title(Driver):
         super().__init__()
         self.star_field()
         self.graphic = False
-        self.min_x = 80
-        self.max_x = 0
-        self.min_y = 80
-        self.max_y = 0
 
     # - Interaction ----------------------------------
     def command(self, which):
@@ -32,14 +29,14 @@ class Title(Driver):
         if(block):
             return block
         # Handle Start Game
-        
-        print(self.min_x, self.min_y, self.max_x, self.max_y)
         if(which is COMMAND_PRIMARY):
             self.new_game()
 
     def new_game(self):
         the_client = client.get_client()
         the_client.focus(Gameplay())
+        the_game = game.get_game()
+        the_game.start()
 
     # - Display --------------------------------------
     def display(self, screen, *args):
@@ -100,10 +97,6 @@ class Title(Driver):
             display_y = (display_y + 1/2) * SCREEN_SIZE_HEIGHT
             display_y = int(display_y)
             star.z -= 0.03
-            self.max_x = max(self.max_x, display_x)
-            self.max_y = max(self.max_y, display_y)
-            self.min_x = min(self.min_x, display_x)
-            self.min_y = min(self.min_y, display_y)
             if(
                     star.z <= 0 or
                     display_y >= 24 or

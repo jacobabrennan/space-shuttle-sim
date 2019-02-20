@@ -8,10 +8,10 @@ import threading
 import array
 import threading
 import time
-import random
+from random import random
 # Local Modules
 from config import *
-from client import get_client
+import client
 from particle import Particle
 from vehicle import Vehicle
 
@@ -33,21 +33,19 @@ class Game:
     def __init__(self, screen):
         super().__init__()
         self.time = None
+        self.ship = None
         # Setup thread for game loop
-        client = get_client()
+        the_client = client.get_client()
 
         def game_loop():
             while(True):
                 # Get commands from client
-                client_command = client.key_command
-                client.key_clear()
+                client_command = the_client.key_command
+                the_client.key_clear()
                 # Do game logic
                 self.iterate(client_command)
                 # Draw Display
-                client.display(
-                    screen,
-                    self.ship.position, self.ship.bearing, self.particles,
-                )
+                the_client.display(screen)
                 # Sleep
                 time.sleep(TIME_GAME_TICK)
 
@@ -77,10 +75,15 @@ class Game:
         #         tile
         # Populate cosmos
         self.ship = Vehicle()
+        self.ship.velocity = (0, 0, AU/20)
         self.particles = []
         for I in range(0, 500):
-            position = (random()*40*AU, random()*40*AU, random()*40*AU)
+            position = (
+                (random()-1/2) * 40*AU,
+                (random()-1/2) * 40*AU,
+                (random()-1/2) * 40*AU,
+            )
             new_particle = Particle(position, random()*10*KILO)
             self.particles.append(new_particle)
         # Create player Spaceship
-        self.particles.append()
+        self.particles.append(self.ship)

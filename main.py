@@ -27,7 +27,8 @@ def main(standard_screen):
     # Create Client and Game
     client = get_client(standard_screen)
     game = get_game(standard_screen)
-    client.finished.wait()
+    # client.finished.wait()
+    time.sleep(10)
     exit(0)
 
 # - Start Main ---------------------------------------
