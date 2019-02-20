@@ -13,8 +13,8 @@ from driver_title import Title
 
 # - Project Constants ----------------------------
 KEY_BINDINGS = {
-    curses.KEY_UP: COMMAND_UP,
-    curses.KEY_DOWN: COMMAND_DOWN,
+    curses.KEY_UP: COMMAND_FORWARD,
+    curses.KEY_DOWN: COMMAND_BACK,
     curses.KEY_RIGHT: COMMAND_RIGHT,
     curses.KEY_LEFT: COMMAND_LEFT,
     ord('w'): COMMAND_UP,

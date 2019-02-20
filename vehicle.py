@@ -20,6 +20,7 @@ class Vehicle(Particle):
         self.angular_velocity = (0, 0, 0)  # Radians per tick
         self.bearing = (0, 0, 1)
         self.attitude = (0, 1, 0)
+        self.radius = -1  # Quirk so ship is "behind" viewpoint.
 
     def pitch(self, radians):
         """Adjusts bearing & attitude by rotating about the X/lateral axis."""

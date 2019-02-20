@@ -60,3 +60,13 @@ def vector_projection(A, B):
         unit_vector(A),
         scalar_projection(A, B),
     )
+
+
+def transform_coordinate_system(position, viewpoint, axes):
+    """Transforms point from one coordinate system into point in another."""
+    delta_position = vector_between(viewpoint, position)
+    return (
+        scalar_product(delta_position, axes[0]),
+        scalar_product(delta_position, axes[1]),
+        scalar_product(delta_position, axes[2]),
+    )

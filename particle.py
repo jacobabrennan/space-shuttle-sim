@@ -20,44 +20,53 @@ class Particle:
             self.position = (0, 0, 0)
         self.radius = radius
 
-    def graphic(self, viewpoint, bearing, attitude, starboard):
-        # Translate position into terms of viewpoint coordinates
-        delta_position = vector_between(viewpoint, self.position)
-        relative_position = (
-            scalar_product(delta_position, starboard),
-            scalar_product(delta_position, attitude),
-            scalar_product(delta_position, bearing),
-        )
-
-        #
-        if(relative_position[2] <= 0):
-            return None
-        #
-        scale = 1 / relative_position[2]
-        display_position = (
-            relative_position[0]*scale,
-            relative_position[1]*scale,
-            relative_position[2],
-        )
-        apparent_size = scale * self.radius * 2
-        pixel_size = apparent_size * SCREEN_PIXEL_WIDTH/SCREEN_PHYSICAL_WIDTH
-        # ^ Only width is needed as all particles are spheres
-        graphic = None
-        if(pixel_size >= 6):
-            graphic = '@'
-        elif(pixel_size >= 5):
-            graphic = 'o'
-        elif(pixel_size >= 4):
-            graphic = '•'
-            # °*+@Oo©®
-        elif(pixel_size >= 3/4 and random.random() < 1/8):
-            graphic = random.choice(('+', '×'))
-        # elif(pixel_size >= 1/50):
-        #     graphic = '·'
+    def graphic(self, relative_position):
+        if(pixel_radius < CHARACTER_WIDTH*2):
+            return self.graphic_simple(pixel_radius, pixel_position)
         else:
-            graphic = '·'
+            return self.graphic_large(pixel_radius, pixel_position)
+
+    def graphic_simple(self, pixel_radius, pixel_position):
+        character_position = (
+            pixel_position[0] / CHARACTER_WIDTH,
+            pixel_position[1] / CHARACTER_HEIGHT,
+            pixel_position[2],
+        )  # Offset from origin, in terms of characters (Y axis points up)
+        sprite = None
+        if(pixel_radius >= 6):
+            sprite = '@'
+        elif(pixel_radius >= 5):
+            sprite = 'o'
+        elif(pixel_radius >= 4):
+            sprite = '•'
+            # °*+@Oo©®
+        elif(pixel_radius >= 3/4 and random.random() < 1/8):
+            sprite = random.choice(('+', '×'))
+        # elif(pixel_radius >= 1/50):
+        #     sprite = '·'
+        else:
+            sprite = '·'
         #
-        return (graphic, display_position)
+        return (sprite, character_position)
+
+    def graphic_large(self, pixel_radius, pixel_position):
+        character_position = (
+            pixel_position[0] / CHARACTER_WIDTH,
+            pixel_position[1] / CHARACTER_HEIGHT,
+            pixel_position[2],
+        )  # Offset from origin, in terms of characters (Y axis points up)
+        left_edge = (pixel_position[0] - pixel_radius) / CHARACTER_WIDTH
+        right_edge = (pixel_position[0] + pixel_radius) / CHARACTER_WIDTH
+        top_edge = (pixel_position[1] - pixel_radius) / CHARACTER_HEIGHT
+        bottom_edge = (pixel_position[1] + pixel_radius) / CHARACTER_HEIGHT
+        chars_height = (right_edge - left_edge) + 1
+        chars_width = (top_edge - bottom_edge) + 1
+        graphic = [None] * int(chars_width*chars_height)
+        for compound_index in range(len(graphic)):
+            posX = compound_index % chars_width  # Left to right
+            posY = math.floor(compound_index / chars_width)  # Bottom up
+            graphic[compound_index] = '#'
+        return (None, character_position, (graphic, chars_width, chars_height))
 
     def take_turn(self, game_time):
         pass
