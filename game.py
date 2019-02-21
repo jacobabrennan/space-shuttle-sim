@@ -84,9 +84,9 @@ class Game:
             S.roll(math.pi/turn_rate)
             S.velocity = scale_vector(S.bearing, magnitude(S.velocity))
         elif(player_command == COMMAND_FORWARD):
-            S.velocity = scale_vector(S.bearing, magnitude(S.velocity)+accelleration)
+            S.velocity = scale_vector(S.bearing, max(accelleration, magnitude(S.velocity)*2))
         elif(player_command == COMMAND_BACK):
-            S.velocity = scale_vector(S.bearing, magnitude(S.velocity)-accelleration)
+            S.velocity = scale_vector(S.bearing, 0) #magnitude(S.velocity)-accelleration)
         # Move all particles
         for particle in self.particles:
             particle.take_turn(self.time)
@@ -95,7 +95,7 @@ class Game:
         self.time = 0
         # Populate cosmos
         self.ship = Vehicle()
-        self.ship.velocity = (0, 0, AU/10000)#/KILO)
+        self.ship.velocity = (0, 0, 0)#AU/10000)#/KILO)
         self.particles = []
         for I in range(0, 5000):
             position = (
@@ -105,7 +105,7 @@ class Game:
             )
             new_particle = Particle(position, random()*695000*KILO)
             self.particles.append(new_particle)
-        new_particle = Particle((4*GIGA, 1*GIGA, AU*1/10), random()*695000*KILO)
+        new_particle = Particle((0,0, AU*1/10), random()*695000*KILO)
         self.particles.append(new_particle)
         # Create player Spaceship
         self.particles.append(self.ship)

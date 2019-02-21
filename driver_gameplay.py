@@ -95,16 +95,30 @@ class Gameplay(Driver):
         # Disc Tuple has form: (position, radius)
         pixel_radius = disc[1]
         # Draw point-like disc
-        if(pixel_radius < 1): # CHARACTER_WIDTH*2):
+        if(pixel_radius < CHARACTER_WIDTH*1.5):
             char_x = disc[0][0] / CHARACTER_WIDTH
             char_y = disc[0][1] / CHARACTER_HEIGHT
-            self.draw_sprite(screen, char_x, char_y, '·')
+            sprite = '·'
+            if(pixel_radius < 3/4):
+                sprite = '·'
+            elif(pixel_radius < 1):
+                if(random.random() < 1/8):
+                    sprite = random.choice(('+', '×'))
+            elif(pixel_radius < 4):
+                sprite = '•'
+            elif(pixel_radius < 5):
+                sprite = 'o'
+            else:
+                sprite = '@'
+                # °*+@Oo©®
+            #
+            self.draw_sprite(screen, char_x, char_y, sprite)
             return
         # Get edges of disc bounding rectangle
         # Start at pixel precision
-        left_edge = (disc[0][0] - pixel_radius) + disc[0][0]
+        left_edge = (disc[0][0] - pixel_radius)
         right_edge = (left_edge + pixel_radius*2)
-        bottom_edge = (disc[0][1] - pixel_radius) + disc[0][1]
+        bottom_edge = (disc[0][1] - pixel_radius)
         top_edge = (bottom_edge + pixel_radius*2)
         # Resolve pixel values to character precision
         left_edge /= CHARACTER_WIDTH
@@ -124,22 +138,55 @@ class Gameplay(Driver):
         right_edge = int(min(right_edge, SCREEN_CHARACTER_WIDTH/2))
         bottom_edge = int(max(bottom_edge, -SCREEN_CHARACTER_HEIGHT/2))
         top_edge = int(min(top_edge, SCREEN_CHARACTER_HEIGHT/2))
-        #
+        # Draw each character space within the display disc
         for pos_y in range(bottom_edge, top_edge+1):
             for pos_x in range(left_edge, right_edge+1):
-                self.draw_sprite(screen, pos_x, pos_y, '#')
-        # Large_sprite tuple has the form: ([sprites], width, height)
-        # pos_x = 0
-        # pos_y = 0
-        # char_width = graphic[2][1]
-        # for sprite in graphic[2][0]:
-        #     self.draw_sprite(
-        #         screen, pos_x+graphic[1][0], pos_y+graphic[1][1], sprite)
-        #     pos_x += 1
-        #     if(pos_x > char_width):
-        #         pos_y += 1
-        #         pos_x = 0
+                # To determine if a full or partial space should be drawn:
+                # Get central vector
+                center = (
+                    (pos_x)*CHARACTER_WIDTH,
+                    (pos_y)*CHARACTER_HEIGHT,
+                    disc[0][2],  # z coords match, in same plane
+                )
+                # Compare to sides of character space rectangle
+                dist_left = distance(
+                    disc[0],
+                    (center[0]-CHARACTER_WIDTH/2, center[1], center[2]),
+                )
+                dist_right = distance(
+                    disc[0],
+                    (center[0]+CHARACTER_WIDTH/2, center[1], center[2]),
+                )
+                dist_bottom = distance(
+                    disc[0],
+                    (center[0], center[1]-CHARACTER_HEIGHT/2, center[2]),
+                )
+                dist_top = distance(
+                    disc[0],
+                    (center[0], center[1]+CHARACTER_HEIGHT/2, center[2]),
+                )
+                # Determine which sides are within the disc radius
+                sprite_sides = 0
+                if(dist_left <= pixel_radius):
+                    sprite_sides |= 8
+                if(dist_right <= pixel_radius):
+                    sprite_sides |= 4
+                if(dist_bottom <= pixel_radius):
+                    sprite_sides |= 2
+                if(dist_top <= pixel_radius):
+                    sprite_sides |= 1
+                # Draw the appropriate character
+                sprite = self.sprite_sides[sprite_sides]
+                if(sprite_sides):
+                    self.draw_sprite(screen, pos_x, pos_y, sprite)
 
     def sort_display_discs(self, disc):
         """Sort drawing order by depth. Used by self.display."""
         return -(disc[0][2])
+
+    sprite_sides = [
+        '@', '"', '_', '+',
+        '(', '\\', '/', '[',
+        ')', '/', '\\', ']',
+        '+', '%', 'x', '#',
+    ]
