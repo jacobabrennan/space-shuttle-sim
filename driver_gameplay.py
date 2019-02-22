@@ -20,15 +20,28 @@ class Gameplay(Driver):
     def __init__(self):
         super().__init__()
         self.game = game.get_game()
+        self.starfield = Starfield()
 
-    # - Interaction ----------------------------------
-
-    # - Display Functions ----------------------------
     def display(self, screen):
         """Displays the game state on the screen."""
         # Cancel if no camera is available
         if(self.game.ship is None):
             return
+        self.starfield.display(screen)
+
+
+# = Starfield Screen Definition ===============================================
+
+# - Initialization -------------------------------
+class Starfield(Driver):
+    def __init__(self):
+        super().__init__()
+        self.game = game.get_game()
+
+    # - Interaction ----------------------------------
+
+    # - Display Functions ----------------------------
+    def display(self, screen):
         # Get cosmos data from game
         viewpoint = self.game.ship.position
         bearing = self.game.ship.bearing
@@ -99,7 +112,7 @@ class Gameplay(Driver):
         if(pixel_radius < CHARACTER_WIDTH):
             char_x = disc[0][0] / CHARACTER_WIDTH
             char_y = disc[0][1] / CHARACTER_HEIGHT
-            close = (disc[0][2] < 10*AU)
+            close = (disc[0][2] < 1/2*AU)
             sprite = '·'
             if(pixel_radius < 1):
                 sprite = '·'

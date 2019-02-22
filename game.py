@@ -100,11 +100,34 @@ class Game:
         self.ship.position = (AU, 0, 0)
         self.particles.append(self.ship)
         # self.ship.velocity = (0, 0, 0)#AU/10000)#/KILO)
-        for I in range(0, 500):
+        # Milky Way
+        for I in range(0, 200):
+            # 63* inclination of milkyway
+            # 200 kly diameter
+            theta = random()*math.pi*2
+            pos_x = math.cos(theta)
+            pos_y = math.sin(theta)
             position = (
-                (random()-1/2) * 10*LY,
-                (random()-1/2) * 10*LY,
-                (random()-1/2) * 10*LY,
+                pos_x * random()*200*LY*KILO,
+                pos_y * random()*200*LY*KILO,
+                (random()-1/2)*25*LY*KILO,
+            )
+            position = transform_coordinate_system(
+                position, (26.4*LY*KILO, 0, 25*LY*KILO),
+                (
+                    (1, 0, 0),
+                    (0, math.sin(math.pi/3), math.cos(math.pi/3)),
+                    (0, math.cos(math.pi/3), math.sin(math.pi/3)),
+                )
+            )
+            new_particle = Particle(position, random()*695000*KILO)
+            self.particles.append(new_particle)
+        # Solar neighborhood
+        for I in range(0, 200):
+            position = (
+                (random()-1/2)*200*LY,
+                (random()-1/2)*200*LY,
+                (random()-1/2)*200*LY,
             )
             new_particle = Particle(position, random()*695000*KILO)
             self.particles.append(new_particle)
@@ -117,9 +140,25 @@ class Game:
         pos_y = math.sin(theta)
         new_particle = Particle((pos_x*57909050*KILO, 0, pos_y*57909050*KILO), 2439.7*KILO, mass=3.3011e+23)
         self.particles.append(new_particle)
+        # Venus
+        pass
         # Earth
         new_particle = Particle((AU, 0, (384399*KILO)/2), 6371*KILO, mass=5.972e+24)
         self.particles.append(new_particle)
         # Moon
         new_particle = Particle((AU, 0, -(384399*KILO)/2), 1737.1*KILO, mass=7.342e+22)
         self.particles.append(new_particle)
+        # Mars
+        pass
+        # Asteroid Belt
+        # for I in range(0, 200):
+        #     theta = random()*math.pi*2
+        #     pos_x = math.cos(theta)
+        #     pos_y = math.sin(theta)
+        #     position = (
+        #         pos_x * 2*AU + random()*1*AU,
+        #         (random()-1/2) * AU/2,
+        #         pos_y * 2*AU + random()*1*AU,
+        #     )
+        #     new_particle = Particle(position, random()*100*KILO)
+        #     self.particles.append(new_particle)
