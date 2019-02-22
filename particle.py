@@ -13,25 +13,40 @@ from vector3d import *
 
 class Particle:
 
-    def __init__(self, position=(0, 0, 0), radius=1):
+    def __init__(self, position=(0, 0, 0), radius=1, mass=0):
         if(position):
             self.position = tuple(position)
         else:
             self.position = (0, 0, 0)
         self.radius = radius
-        self.test_a = 0
+        self.mass = mass
 
     def take_turn(self, game_time):
-        self.test_a += 0.1
-        if(self.test_a > 100):
-            self.test_a = 0
+        pass
+
+    def exert_gravity(self, vehicles, time_interval):
+        for vehicle in vehicles:
+            if(not vehicle.mass):
+                print('vehicle')
+                continue
+            # Fgrav = G * ( (m1*m2) / (r**2) )
+            # F = ma
+            # a = v/t
+            f_grav = GRAVITATIONAL_CONSTANT * (
+                (self.mass*vehicle.mass) /
+                (distance(self.position, vehicle.position)**2)
+            )
+            A = f_grav/vehicle.mass
+            V = A * time_interval
+            V = scale_vector(unit_vector(vector_between(vehicle.position, self.position)), V)
+            vehicle.velocity = vector_addition(vehicle.velocity, V)
 
     def sprite(self, radius, position):
         tile = (
             int(((position[0]/radius)+2) * 25),
             int(((position[1]/radius)+1.6) * 16),
         )
-        string_index = tile[1]*100 + tile[0] + int(self.test_a)
+        string_index = tile[1]*100 + tile[0] # + int(self.test_a)
         # print(string_index, tile)
         return map_earth[string_index]
 

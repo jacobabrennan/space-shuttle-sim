@@ -5,6 +5,7 @@
 # - Dependencies ---------------------------------
 # Python Modules
 import random
+import curses
 # Local Modules
 from config import *
 from vector3d import *
@@ -54,7 +55,7 @@ class Gameplay(Driver):
         for disc in display_discs:
             self.draw_disc(screen, disc)
 
-    def draw_sprite(self, screen, char_x, char_y, sprite):
+    def draw_sprite(self, screen, char_x, char_y, sprite, style=curses.A_NORMAL):
         """Draws a single character at a Character position on the screen."""
         # Center graphic on screen
         screen_x = int(SCREEN_CHARACTER_WIDTH/2 + char_x)
@@ -71,7 +72,7 @@ class Gameplay(Driver):
             )
         ):
             return
-        screen.addstr(screen_y, screen_x, sprite)
+        screen.addstr(screen_y, screen_x, sprite, style)
 
     def scale_display_disc(self, radius, relative_position, particle):
         """Calculates the disc on which to draw a particle."""
@@ -95,14 +96,14 @@ class Gameplay(Driver):
         # Disc Tuple has form: (position, radius)
         pixel_radius = disc[1]
         # Draw point-like disc
-        if(pixel_radius < CHARACTER_WIDTH*1.5):
+        if(pixel_radius < CHARACTER_WIDTH):
             char_x = disc[0][0] / CHARACTER_WIDTH
             char_y = disc[0][1] / CHARACTER_HEIGHT
+            close = (disc[0][2] < 10*AU)
             sprite = '·'
-            if(pixel_radius < 3/4):
+            if(pixel_radius < 1):
                 sprite = '·'
-            elif(pixel_radius < 1):
-                if(random.random() < 1/8):
+                if(close and random.random() < 1/8):
                     sprite = random.choice(('+', '×'))
             elif(pixel_radius < 4):
                 sprite = '•'
@@ -112,7 +113,10 @@ class Gameplay(Driver):
                 sprite = '@'
                 # °*+@Oo©®
             #
-            self.draw_sprite(screen, char_x, char_y, sprite)
+            if(close):
+                self.draw_sprite(screen, char_x, char_y, sprite, curses.A_BOLD)
+            else:
+                self.draw_sprite(screen, char_x, char_y, sprite, curses.A_DIM)
             return
         # Get edges of disc bounding rectangle
         # Start at pixel precision
@@ -178,11 +182,12 @@ class Gameplay(Driver):
                 # Draw the appropriate character
                 if(sprite_sides):
                     sprite = self.sprite_sides[sprite_sides]
-                    if(sprite_sides == 15):
-                        sprite = disc[2].sprite(
-                            pixel_radius,
-                            vector_between(disc[0], center)
-                        )
+                    # if(sprite_sides == 15):
+                    #     self.draw_sprite(screen, pos_x, pos_y, sprite, curses.A_REVERSE | curses.A_BOLD)
+                    #     # sprite = disc[2].sprite(
+                    #     #     pixel_radius,
+                    #     #     vector_between(disc[0], center)
+                    #     # )
                     self.draw_sprite(screen, pos_x, pos_y, sprite)
 
     def sort_display_discs(self, disc):

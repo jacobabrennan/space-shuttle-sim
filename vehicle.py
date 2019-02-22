@@ -9,6 +9,7 @@ import math
 from config import *
 from vector3d import *
 from particle import Particle
+import game
 
 
 class Vehicle(Particle):
@@ -21,6 +22,8 @@ class Vehicle(Particle):
         self.bearing = (0, 0, 1)
         self.attitude = (0, 1, 0)
         self.radius = -1  # Quirk so ship is "behind" viewpoint.
+        the_game = game.get_game()
+        the_game.vehicles.append(self)
 
     def pitch(self, radians):
         """Adjusts bearing & attitude by rotating about the X/lateral axis."""
@@ -64,3 +67,6 @@ class Vehicle(Particle):
             self.roll(self.angular_velocity[2])
         # Apply translations
         self.position = vector_addition(self.position, self.velocity)
+    
+    def exert_gravity(self, vehicles, time_interval):
+        pass
