@@ -57,9 +57,8 @@ class Starfield(Driver):
             # Determine particle position relative to viewport and axes
             relative_position = transform_coordinate_system(
                 particle.position, viewpoint, axes)
-            depth = relative_position[2]
             # Disregard objects that are fully behind the viewpoint
-            if(depth <= -particle.radius):
+            if(relative_position[2] <= -particle.radius):
                 continue
             # Calculate display disc
             display_discs.append(self.scale_display_disc(
@@ -203,6 +202,9 @@ class Starfield(Driver):
                     #     #     pixel_radius,
                     #     #     vector_between(disc[0], center)
                     #     # )
+                    if(disc[0][2] <= 0):
+                        self.draw_sprite(screen, pos_x, pos_y, '~')
+                        continue
                     self.draw_sprite(screen, pos_x, pos_y, sprite)
 
     def sort_display_discs(self, disc):
@@ -213,7 +215,7 @@ class Starfield(Driver):
         '@', '"', '_', '+',
         '(', '\\', '/', '[',
         ')', '/', '\\', ']',
-        '+', '%', 'x', '#',
+        '+', '%', '"', '#',
     ]
 
 
@@ -241,7 +243,9 @@ class Cockpit(Driver):
         pos_x = int(self.game.ship.bearing[0]*100)
         pos_y = int(self.game.ship.bearing[1]*100)
         pos_z = int(self.game.ship.bearing[2]*100)
-        screen.addstr(19, 3, F'V: <{pos_x}, {pos_y}, {pos_z}>', curses.A_BOLD)
+        display_string = F' V: <{pos_x}, {pos_y}, {pos_z}>'
+        display_string += ' '*(20-len(display_string))
+        screen.addstr(19, 2, display_string, curses.A_BOLD)
         # Display Vector to Earth
         earth_vector = unit_vector(
             vector_between(self.game.ship.position, self.game.earth.position)
@@ -249,9 +253,13 @@ class Cockpit(Driver):
         pos_x = int(earth_vector[0]*100)
         pos_y = int(earth_vector[1]*100)
         pos_z = int(earth_vector[2]*100)
-        screen.addstr(20, 3, F'E: <{pos_x}, {pos_y}, {pos_z}>', curses.A_BOLD)
+        display_string = F' E: <{pos_x}, {pos_y}, {pos_z}>'
+        display_string += ' '*(21-len(display_string))
+        screen.addstr(20, 2, display_string, curses.A_BOLD)
         # Display Mission Time (days passed)
-        screen.addstr(21, 3, F'T: {int((self.game.time*TICK_SECONDS)/(60*60*24))} days', curses.A_BOLD)
+        display_string = F' T: {int((self.game.time*TICK_SECONDS)/(60*60*24))} days'
+        display_string += ' '*(22-len(display_string))
+        screen.addstr(21, 2, display_string, curses.A_BOLD)
 
     # - HUD Graphic ----------------------------------
     hud = [

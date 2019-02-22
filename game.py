@@ -74,9 +74,9 @@ class Game:
             S.angular_velocity = (A[0], A[1]+R, A[2])
         elif(player_command == COMMAND_RIGHT):
             S.angular_velocity = (A[0], A[1]-R, A[2])
-        elif(player_command == COMMAND_ROLL_RIGHT):
+        elif(player_command == COMMAND_ROLL_ANTICLOCK):
             S.angular_velocity = (A[0], A[1], A[2]+R)
-        elif(player_command == COMMAND_ROLL_LEFT):
+        elif(player_command == COMMAND_ROLL_CLOCKWISE):
             S.angular_velocity = (A[0], A[1], A[2]-R)
         elif(player_command == COMMAND_FORWARD):
             S.velocity = scale_vector(S.bearing, max(accelleration, magnitude(S.velocity)*2))

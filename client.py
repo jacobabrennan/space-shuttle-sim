@@ -21,8 +21,8 @@ KEY_BINDINGS = {
     ord('s'): COMMAND_DOWN,
     ord('d'): COMMAND_RIGHT,
     ord('a'): COMMAND_LEFT,
-    ord('e'): COMMAND_ROLL_RIGHT,
-    ord('q'): COMMAND_ROLL_LEFT,
+    ord('e'): COMMAND_ROLL_CLOCKWISE,
+    ord('q'): COMMAND_ROLL_ANTICLOCK,
     ord(' '): COMMAND_PRIMARY,
 }
 
