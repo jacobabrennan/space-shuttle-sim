@@ -176,8 +176,13 @@ class Gameplay(Driver):
                 if(dist_top <= pixel_radius):
                     sprite_sides |= 1
                 # Draw the appropriate character
-                sprite = self.sprite_sides[sprite_sides]
                 if(sprite_sides):
+                    sprite = self.sprite_sides[sprite_sides]
+                    if(sprite_sides == 15):
+                        sprite = disc[2].sprite(
+                            pixel_radius,
+                            vector_between(disc[0], center)
+                        )
                     self.draw_sprite(screen, pos_x, pos_y, sprite)
 
     def sort_display_discs(self, disc):

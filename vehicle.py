@@ -61,6 +61,6 @@ class Vehicle(Particle):
         if(self.angular_velocity[1]):
             self.yaw(self.angular_velocity[1])
         if(self.angular_velocity[2]):
-            self.roll(self.angular_velocity[1])
+            self.roll(self.angular_velocity[2])
         # Apply translations
         self.position = vector_addition(self.position, self.velocity)

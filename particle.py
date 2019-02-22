@@ -19,54 +19,71 @@ class Particle:
         else:
             self.position = (0, 0, 0)
         self.radius = radius
-
-    def graphic(self, relative_position):
-        if(pixel_radius < CHARACTER_WIDTH*2):
-            return self.graphic_simple(pixel_radius, pixel_position)
-        else:
-            return self.graphic_large(pixel_radius, pixel_position)
-
-    def graphic_simple(self, pixel_radius, pixel_position):
-        character_position = (
-            pixel_position[0] / CHARACTER_WIDTH,
-            pixel_position[1] / CHARACTER_HEIGHT,
-            pixel_position[2],
-        )  # Offset from origin, in terms of characters (Y axis points up)
-        sprite = None
-        if(pixel_radius >= 6):
-            sprite = '@'
-        elif(pixel_radius >= 5):
-            sprite = 'o'
-        elif(pixel_radius >= 4):
-            sprite = '•'
-            # °*+@Oo©®
-        elif(pixel_radius >= 3/4 and random.random() < 1/8):
-            sprite = random.choice(('+', '×'))
-        # elif(pixel_radius >= 1/50):
-        #     sprite = '·'
-        else:
-            sprite = '·'
-        #
-        return (sprite, character_position)
-
-    def graphic_large(self, pixel_radius, pixel_position):
-        character_position = (
-            pixel_position[0] / CHARACTER_WIDTH,
-            pixel_position[1] / CHARACTER_HEIGHT,
-            pixel_position[2],
-        )  # Offset from origin, in terms of characters (Y axis points up)
-        left_edge = (pixel_position[0] - pixel_radius) / CHARACTER_WIDTH
-        right_edge = (pixel_position[0] + pixel_radius) / CHARACTER_WIDTH
-        top_edge = (pixel_position[1] - pixel_radius) / CHARACTER_HEIGHT
-        bottom_edge = (pixel_position[1] + pixel_radius) / CHARACTER_HEIGHT
-        chars_height = (right_edge - left_edge) + 1
-        chars_width = (top_edge - bottom_edge) + 1
-        graphic = [None] * int(chars_width*chars_height)
-        for compound_index in range(len(graphic)):
-            posX = compound_index % chars_width  # Left to right
-            posY = math.floor(compound_index / chars_width)  # Bottom up
-            graphic[compound_index] = '#'
-        return (None, character_position, (graphic, chars_width, chars_height))
+        self.test_a = 0
 
     def take_turn(self, game_time):
-        pass
+        self.test_a += 0.1
+        if(self.test_a > 100):
+            self.test_a = 0
+
+    def sprite(self, radius, position):
+        tile = (
+            int(((position[0]/radius)+2) * 25),
+            int(((position[1]/radius)+1.6) * 16),
+        )
+        string_index = tile[1]*100 + tile[0] + int(self.test_a)
+        # print(string_index, tile)
+        return map_earth[string_index]
+
+map_earth = ''.join(reversed([
+    '####################################################################################################',
+    '####################################################################################################',
+    '####################################################################################################',
+    '####################################################################################################',
+    '####################################################################################################',
+    '####################################################################################################',
+    '####################################################################################################',
+    '####################################################################################################',
+    '####################################################################################################',
+    ',,,,,,,,,,,,,,.,..,,,,,,,,,,..,,,,,,,,....,.,,,,,......,,..,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,..,..',
+    ',....,.......,,....,=:.~=~I~~.=.,,,,,,,,:::~:, ?7=I 7~,$ 7         IOO~.,.IO7,=,,.,.,......,...,,,.,',
+    '=.,?,..,~~,.,,,?+~.::,++I+?=OO  OO~:,,::::7               OO  OO?8 O    ????+????+?$?$ O    O,.,,,,,',
+    '+OOO??II77I77I7???7 II7++7+ ++?? OOI.:~:$O O O       8?77I77?  ?II????+I+7?I?IIII?I7IIII?II77?II???I',
+    '   77II77III77$$7$77III7O OI+7OI    ~=       O  O O?IIO $$$8$$$$$7$7$7777$$$77777777777I??7?I$IIIIO ',
+    '    OIOOOOO $+I $$$ $$77IOO7II7?7O              7OOO$$O7$$$$$$ $$$$$77$7$7777$$$77?7IIII OOOOI$ O   ',
+    '          OOO  7 $I??7$$  77$$$$7OO           OOIO77$$$$77777IIIIIII?III$77777$7$77$777$7 OOO       ',
+    '            OOO7I$77I?I$$8 $$$7 $O             OO$$I$$$7$7O$II? +=~++??? I7I7?I++??I7$7$OO$O        ',
+    '               $???$I?I$$$$$$OOOOO             77$$OOOO$O$?77?$O~=++7?I=+=:=$==+? 7$7 OOI           ',
+    '              OO +77II7$$$$$OOOOO               7?+,OOOOOOO7=?I??+=?II7I?=+===$$777 O 7 O           ',
+    '                O O7??IOOOOO OOO              +=+~+=++?~~==I~++ +I?==+?7 7?  $ $$77OO               ',
+    '                    $IOOOO$ $OO              ~==+=~+++~+=~?++==~+I  OI7777$ $   $ OOOO              ',
+    '                     O7$$O  OOOO             ++++==+:~:===++O+=~7OOOOOI7OOOO 77OO O7                ',
+    '                       O OO O+ O   O         77IIII???II??I7?$O+O  OOO 7O OOO  $ OO7$               ',
+    '                         O  $ 7$7$7OOO        O $ O $$$$$77I7??       O   OOO7OO O$OO               ',
+    '                          OI$ OO  $$O           OOO $ O   7$I7 O             $    OOOOO             ',
+    '                          OI$ OO   $77?+          OOO7$$$7II OO                OO  O  $O$7 I$       ',
+    '                           O?$  $$$$I7?O            O?7II7777O                     OOO   $OOO       ',
+    '         $                 O 7+$ $777I$O             ?II77I7 O7                     I?I?O?  OO     $',
+    '                            OO?I777777               $???77OOO7                  ?IIII????IO O OO   ',
+    '                            OOIII77$  O               ????7                      +IIII7?+I?I        ',
+    '                             O?I???                   O7IO                        ??   7I??$        ',
+    '                             $?I                                                         O        7 ',
+    '                             7IO                                                           O    IO  ',
+    '                            O?O                                                                     ',
+    '                              O                                                                     ',
+    '                                O7                                                                  ',
+    '                              :=,                             +:,,$O   O,......,:?,,..,.,, O        ',
+    '              7     $:.,,.O~,.,.,O          .,..,..,,,.,:.,,...,,::+=,,....,,,,,,....,:,,,,,,,,:I   ',
+    ':~==.,.,::,::~:,,,:,::,,,~,=..,...,.:..:~=:,~:::,,,,,:,,,,,,:::,,..,,,:,:::::::,,,,:,:::::,::~~:....',
+    ':,...~~:::~::::,,,:::,,,.:~~~:::~::,,,,,,:~:,::::::::::::::::::::::::::::::::::::~::::,,,,,,,,~=?=~:',
+    ',,,,,,,.,.,.,,..,.........,,,,.......,....,....,...,,,,.,,,,,,,,,,,,.,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,',
+    '####################################################################################################',
+    '####################################################################################################',
+    '####################################################################################################',
+    '####################################################################################################',
+    '####################################################################################################',
+    '####################################################################################################',
+    '####################################################################################################',
+    '####################################################################################################',
+    '####################################################################################################',
+]))
