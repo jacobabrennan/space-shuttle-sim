@@ -21,6 +21,7 @@ class Gameplay(Driver):
         super().__init__()
         self.game = game.get_game()
         self.starfield = Starfield()
+        self.cockpit = Cockpit()
 
     def display(self, screen):
         """Displays the game state on the screen."""
@@ -28,6 +29,7 @@ class Gameplay(Driver):
         if(self.game.ship is None):
             return
         self.starfield.display(screen)
+        self.cockpit.display(screen)
 
 
 # = Starfield Screen Definition ===============================================
@@ -212,4 +214,69 @@ class Starfield(Driver):
         '(', '\\', '/', '[',
         ')', '/', '\\', ']',
         '+', '%', 'x', '#',
+    ]
+
+
+# = Cockpit HUD Definition ====================================================
+
+# - Initialization -------------------------------
+class Cockpit(Driver):
+    def __init__(self):
+        super().__init__()
+        self.game = game.get_game()
+
+    # - Interaction ----------------------------------
+
+    # - Display Functions ----------------------------
+    def display(self, screen):
+        # Draw HUD background graphic
+        for pos_y in range(len(self.hud)):
+            line = self.hud[pos_y]
+            for pos_x in range(len(line)):
+                character = line[pos_x]
+                if(character is ' '):
+                    continue
+                screen.addstr(pos_y, pos_x, character)
+        # Display Vector (bearing)
+        pos_x = int(self.game.ship.bearing[0]*100)
+        pos_y = int(self.game.ship.bearing[1]*100)
+        pos_z = int(self.game.ship.bearing[2]*100)
+        screen.addstr(19, 3, F'V: <{pos_x}, {pos_y}, {pos_z}>', curses.A_BOLD)
+        # Display Vector to Earth
+        earth_vector = unit_vector(
+            vector_between(self.game.ship.position, self.game.earth.position)
+        )
+        pos_x = int(earth_vector[0]*100)
+        pos_y = int(earth_vector[1]*100)
+        pos_z = int(earth_vector[2]*100)
+        screen.addstr(20, 3, F'E: <{pos_x}, {pos_y}, {pos_z}>', curses.A_BOLD)
+        # Display Mission Time (days passed)
+        screen.addstr(21, 3, F'T: {int((self.game.time*TICK_SECONDS)/(60*60*24))} days', curses.A_BOLD)
+
+    # - HUD Graphic ----------------------------------
+    hud = [
+        '       /                                                                \       ',
+        '      /                                                                  \      ',
+        '     /                                                                    \     ',
+        '    /                                                                      \    ',
+        '___/\                                                                      /\___',
+        '   \ \                                                                    / /   ',
+        '    \ \                                                                  / /    ',
+        '     \ \                                                                / /     ',
+        '      \ \                                                              / /      ',
+        '       \ \                                                            / /       ',
+        '        \ \                                                          / /        ',
+        '         \ \                                                        / /         ',
+        '          \ \                                                      / /          ',
+        '           \ \          \                              /          / /           ',
+        '------------\-------------\                          /-------------/------------',
+        '             \             \                        /             /             ',
+        '              \             \______________________/             /              ',
+        '               \                                                /               ',
+        ' +-------------------x                                    x-------------------+ ',
+        ' |                    \                                  /                    | ',
+        ' |                     \                                /                     | ',
+        ' |                      \                              /                      | ',
+        ' |______________________/                              \______________________| ',
+        '                  /                                          \                  ',
     ]

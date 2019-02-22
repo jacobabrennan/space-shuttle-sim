@@ -145,6 +145,7 @@ class Game:
         # Earth
         new_particle = Particle((AU, 0, (384399*KILO)/2), 6371*KILO, mass=5.972e+24)
         self.particles.append(new_particle)
+        self.earth = new_particle
         # Moon
         new_particle = Particle((AU, 0, -(384399*KILO)/2), 1737.1*KILO, mass=7.342e+22)
         self.particles.append(new_particle)
