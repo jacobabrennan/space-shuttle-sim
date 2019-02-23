@@ -58,11 +58,13 @@ class Starfield(Driver):
             relative_position = transform_coordinate_system(
                 particle.position, viewpoint, axes)
             # Disregard objects that are fully behind the viewpoint
-            if(relative_position[2] <= -particle.radius):
+            if(relative_position[2] == 0):
                 continue
+            # if(relative_position[2] <= -particle.radius):
+            #     continue
             # Calculate display disc
             display_discs.append(self.scale_display_disc(
-                particle.radius, relative_position, particle
+                relative_position, particle
             ))
         display_discs.sort(key=self.sort_display_discs)
         # Draw particles onto discs
@@ -88,22 +90,29 @@ class Starfield(Driver):
             return
         screen.addstr(screen_y, screen_x, sprite, style)
 
-    def scale_display_disc(self, radius, relative_position, particle):
+    def scale_display_disc(self, relative_position, particle):
         """Calculates the disc on which to draw a particle."""
-        # Determine display size with depth scaling
-        depth = relative_position[2]
-        if(depth >= 0):
-            scale = 1 / max(1, depth)
+        # Determine position on screen, based on view angle
+        # View screen is a curved rectangle such that:
+        #   Lines drawn horizontally correspond with a 2radian arc,
+        #   Lines drawn vertically correspond with a 0.9radian arc.
+        depth = magnitude(relative_position)
+        angle_x = math.atan2(relative_position[0], relative_position[2])
+        angle_y = math.atan2(relative_position[1], relative_position[2])
+        if(depth <= particle.radius+2):
+            print(depth, particle.radius)
+            angular_radius = math.pi/2
         else:
-            scale = 1 / abs(min(-1, depth))
+            angular_radius = math.pi/2 - math.acos(particle.radius/depth)
+        # Determine display size with depth scaling
         # Determine pixel measurements of radius and position
         meters_to_pixels = SCREEN_PIXEL_WIDTH/SCREEN_PHYSICAL_WIDTH
         pixel_position = (  # Offset from origin, in terms of pixels
-            relative_position[0]*scale*meters_to_pixels,
-            relative_position[1]*scale*meters_to_pixels,
+            angle_x*meters_to_pixels,
+            angle_y*meters_to_pixels,
             depth,
         )
-        pixel_radius = radius * scale * meters_to_pixels
+        pixel_radius = angular_radius * meters_to_pixels
         return (pixel_position, pixel_radius, particle)
 
     def draw_disc(self, screen, disc):

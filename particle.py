@@ -27,7 +27,6 @@ class Particle:
     def exert_gravity(self, vehicles, time_interval):
         for vehicle in vehicles:
             if(not vehicle.mass):
-                print('vehicle')
                 continue
             # Fgrav = G * ( (m1*m2) / (r**2) )
             # F = ma
