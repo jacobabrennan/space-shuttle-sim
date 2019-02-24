@@ -95,7 +95,7 @@ class Game:
         self.particles = []
         self.vehicles = []
         self.ship = Vehicle()
-        self.ship.mass = 0 #74842
+        self.ship.mass = 74842
         self.ship.bearing = (0, 0, 1)
         self.ship.position = (AU, 0, 1+(6371*KILO)+(384399*KILO)/2)
         self.particles.append(self.ship)

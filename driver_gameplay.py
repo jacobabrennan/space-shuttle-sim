@@ -273,12 +273,17 @@ class Cockpit(Driver):
             )
         )
         #
+        earth_distance = magnitude(earth_vector) - self.game.earth.radius
+        display_string = F' D: {int(earth_distance)}'
+        display_string += ' '*(21-len(display_string))
+        screen.addstr(20, 2, display_string, curses.A_BOLD)
+        #
         earth_vector = unit_vector(earth_vector)
         azimuth = int(math.atan2(earth_vector[0], earth_vector[2]) * 180/math.pi)
         altitude = int(math.asin(earth_vector[1]) * 180/math.pi)
-        # math.atan2(earth_vector[1], earth_vector[2]) * 180/math.pi)
         display_string = F' E: <{azimuth}, {altitude}>'
-        screen.addstr(20, 2, display_string, curses.A_BOLD)
+        display_string += ' '*(20-len(display_string))
+        screen.addstr(19, 2, display_string, curses.A_BOLD)
         # Display Mission Time (days passed)
         display_string = F' T: {int((self.game.time*TICK_SECONDS)/(60*60*24))} days'
         display_string += ' '*(22-len(display_string))
