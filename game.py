@@ -65,7 +65,7 @@ class Game:
         S = self.ship
         A = S.angular_velocity
         R = math.pi / 360
-        accelleration = 384399*KILO / 10000
+        accelleration = 100
         if(player_command == COMMAND_UP):
             S.angular_velocity = (A[0]-R, A[1], A[2])
         elif(player_command == COMMAND_DOWN):

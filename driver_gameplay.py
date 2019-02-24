@@ -49,7 +49,8 @@ class Starfield(Driver):
         bearing = self.game.ship.bearing
         attitude = self.game.ship.attitude
         starboard = vector_product(bearing, attitude)
-        particles = self.game.particles
+        particles = self.game.particles.copy()
+        particles.remove(self.game.ship)
         axes = (starboard, attitude, bearing)
         # Get display discs for each particle in view, sorted by depth
         display_discs = []
@@ -58,9 +59,7 @@ class Starfield(Driver):
             relative_position = transform_coordinate_system(
                 particle.position, viewpoint, axes)
             # Disregard objects that are fully behind the viewpoint
-            if(relative_position[2] == 0):
-                continue
-            # if(relative_position[2] <= -particle.radius):
+            # if(relative_position[2] == 0):
             #     continue
             # Calculate display disc
             display_discs.append(self.scale_display_disc(
@@ -93,59 +92,73 @@ class Starfield(Driver):
     def scale_display_disc(self, relative_position, particle):
         """Calculates the disc on which to draw a particle."""
         # Determine position on screen, based on view angle
-        # View screen is a curved rectangle such that:
-        #   Lines drawn horizontally correspond with a 2radian arc,
-        #   Lines drawn vertically correspond with a 0.9radian arc.
-        depth = magnitude(relative_position)
-        angle_x = math.atan2(relative_position[0], relative_position[2])
-        angle_y = math.atan2(relative_position[1], relative_position[2])
-        if(depth <= particle.radius+2):
-            print(depth, particle.radius)
-            angular_radius = math.pi/2
-        else:
-            angular_radius = math.pi/2 - math.acos(particle.radius/depth)
-        # Determine display size with depth scaling
-        # Determine pixel measurements of radius and position
-        meters_to_pixels = SCREEN_PIXEL_WIDTH/SCREEN_PHYSICAL_WIDTH
-        pixel_position = (  # Offset from origin, in terms of pixels
-            angle_x*meters_to_pixels,
-            angle_y*meters_to_pixels,
-            depth,
+        # View screen is a roughly rectangular section of a larger sphere
+        # Find polar coordinates of relative direction projected onto surface
+        absolute_distance = magnitude(relative_position)
+        polar_coordinates = (
+            math.acos(relative_position[2]/absolute_distance),
+            math.atan2(relative_position[1], relative_position[0]),
+            absolute_distance,
         )
-        pixel_radius = angular_radius * meters_to_pixels
-        return (pixel_position, pixel_radius, particle)
+        angular_radius = math.pi/2 - math.acos(min(1,particle.radius/absolute_distance))
+        return (polar_coordinates, angular_radius, particle)
 
     def draw_disc(self, screen, disc):
-        # Disc Tuple has form: (position, radius)
-        pixel_radius = disc[1]
-        # Draw point-like disc
+        # Disc Tuple has form: (polar_coords, angular_radius, particle)
+        meters_to_pixels = SCREEN_PIXEL_WIDTH/(SCREEN_PHYSICAL_WIDTH/2)
+        pixel_radius = disc[1]*meters_to_pixels
+        pixel_x = math.cos(disc[0][1])*disc[0][0]*meters_to_pixels
+        pixel_y = math.sin(disc[0][1])*disc[0][0]*meters_to_pixels
+        # Draw point-like disc (Degenerate case 1)
         if(pixel_radius < CHARACTER_WIDTH):
-            char_x = disc[0][0] / CHARACTER_WIDTH
-            char_y = disc[0][1] / CHARACTER_HEIGHT
-            close = (disc[0][2] < 1/2*AU)
-            sprite = '·'
-            if(pixel_radius < 1):
-                sprite = '·'
-                if(close and random.random() < 1/8):
-                    sprite = random.choice(('+', '×'))
-            elif(pixel_radius < 4):
-                sprite = '•'
-            elif(pixel_radius < 5):
-                sprite = 'o'
-            else:
-                sprite = '@'
-                # °*+@Oo©®
-            #
-            if(close):
-                self.draw_sprite(screen, char_x, char_y, sprite, curses.A_BOLD)
-            else:
-                self.draw_sprite(screen, char_x, char_y, sprite, curses.A_DIM)
+            self.draw_point(screen, pixel_x, pixel_y, pixel_radius, disc[0][2])
             return
+        # Draw planet surface (Degenerate case 2)
+        if(disc[0][0] > math.pi):
+            # Isn't actually happening
+            pass
+        # Draw large circle (Regular disc)
+        # Distortion is used to simulate rotated ellipses at the edges of the
+        # view area. This allows for views of a planet's surface / horizon.
+        distortion = abs(1/math.cos(disc[0][0]))
+        distortion_radius = (distortion-1) * pixel_radius
+        pixel_x += math.cos(disc[0][1]) * distortion_radius
+        pixel_y += math.sin(disc[0][1]) * distortion_radius
+        pixel_radius += distortion_radius
+        self.draw_circle(screen, pixel_x, pixel_y, pixel_radius)
+
+    def sort_display_discs(self, disc):
+        """Sort drawing order by depth. Used by self.display."""
+        return -(disc[0][2])
+
+    def draw_point(self, screen, pixel_x, pixel_y, pixel_radius, depth):
+        char_x = pixel_x / CHARACTER_WIDTH
+        char_y = pixel_y / CHARACTER_HEIGHT
+        close = (depth < 1/2*AU)
+        sprite = '·'
+        if(pixel_radius < 1):
+            sprite = '·'
+            if(close and random.random() < 1/8):
+                sprite = random.choice(('+', '×'))
+        elif(pixel_radius < 4):
+            sprite = '•'
+        elif(pixel_radius < 5):
+            sprite = 'o'
+        else:
+            sprite = '@'
+            # °*+@Oo©®
+        #
+        if(close):
+            self.draw_sprite(screen, char_x, char_y, sprite, curses.A_BOLD)
+        else:
+            self.draw_sprite(screen, char_x, char_y, sprite, curses.A_DIM)
+
+    def draw_circle(self, screen, pixel_x, pixel_y, pixel_radius):
         # Get edges of disc bounding rectangle
         # Start at pixel precision
-        left_edge = (disc[0][0] - pixel_radius)
+        left_edge = (pixel_x - pixel_radius)
         right_edge = (left_edge + pixel_radius*2)
-        bottom_edge = (disc[0][1] - pixel_radius)
+        bottom_edge = (pixel_y - pixel_radius)
         top_edge = (bottom_edge + pixel_radius*2)
         # Resolve pixel values to character precision
         left_edge /= CHARACTER_WIDTH
@@ -166,6 +179,7 @@ class Starfield(Driver):
         bottom_edge = int(max(bottom_edge, -SCREEN_CHARACTER_HEIGHT/2))
         top_edge = int(min(top_edge, SCREEN_CHARACTER_HEIGHT/2))
         # Draw each character space within the display disc
+        disc_center = (pixel_x, pixel_y, 0)
         for pos_y in range(bottom_edge, top_edge+1):
             for pos_x in range(left_edge, right_edge+1):
                 # To determine if a full or partial space should be drawn:
@@ -173,23 +187,23 @@ class Starfield(Driver):
                 center = (
                     (pos_x)*CHARACTER_WIDTH,
                     (pos_y)*CHARACTER_HEIGHT,
-                    disc[0][2],  # z coords match, in same plane
+                    0,  # z coords match, in same plane
                 )
                 # Compare to sides of character space rectangle
                 dist_left = distance(
-                    disc[0],
+                    disc_center,
                     (center[0]-CHARACTER_WIDTH/2, center[1], center[2]),
                 )
                 dist_right = distance(
-                    disc[0],
+                    disc_center,
                     (center[0]+CHARACTER_WIDTH/2, center[1], center[2]),
                 )
                 dist_bottom = distance(
-                    disc[0],
+                    disc_center,
                     (center[0], center[1]-CHARACTER_HEIGHT/2, center[2]),
                 )
                 dist_top = distance(
-                    disc[0],
+                    disc_center,
                     (center[0], center[1]+CHARACTER_HEIGHT/2, center[2]),
                 )
                 # Determine which sides are within the disc radius
@@ -211,14 +225,7 @@ class Starfield(Driver):
                     #     #     pixel_radius,
                     #     #     vector_between(disc[0], center)
                     #     # )
-                    if(disc[0][2] <= 0):
-                        self.draw_sprite(screen, pos_x, pos_y, '~')
-                        continue
                     self.draw_sprite(screen, pos_x, pos_y, sprite)
-
-    def sort_display_discs(self, disc):
-        """Sort drawing order by depth. Used by self.display."""
-        return -(disc[0][2])
 
     sprite_sides = [
         '@', '"', '_', '+',
@@ -249,27 +256,35 @@ class Cockpit(Driver):
                     continue
                 screen.addstr(pos_y, pos_x, character)
         # Display Vector (bearing)
-        pos_x = int(self.game.ship.bearing[0]*100)
-        pos_y = int(self.game.ship.bearing[1]*100)
-        pos_z = int(self.game.ship.bearing[2]*100)
-        display_string = F' V: <{pos_x}, {pos_y}, {pos_z}>'
-        display_string += ' '*(20-len(display_string))
-        screen.addstr(19, 2, display_string, curses.A_BOLD)
+        # pos_x = int(self.game.ship.bearing[0]*100)
+        # pos_y = int(self.game.ship.bearing[1]*100)
+        # pos_z = int(self.game.ship.bearing[2]*100)
+        # display_string = F' V: <{pos_x}, {pos_y}, {pos_z}>'
+        # display_string += ' '*(20-len(display_string))
+        # screen.addstr(19, 2, display_string, curses.A_BOLD)
         # Display Vector to Earth
-        earth_vector = unit_vector(
-            vector_between(self.game.ship.position, self.game.earth.position)
+        earth_vector = transform_coordinate_system(
+            self.game.earth.position,
+            self.game.ship.position,
+            (
+                vector_product(self.game.ship.bearing, self.game.ship.attitude),
+                self.game.ship.attitude,
+                self.game.ship.bearing,
+            )
         )
-        pos_x = int(earth_vector[0]*100)
-        pos_y = int(earth_vector[1]*100)
-        pos_z = int(earth_vector[2]*100)
-        display_string = F' E: <{pos_x}, {pos_y}, {pos_z}>'
-        display_string += ' '*(21-len(display_string))
+        #
+        earth_vector = unit_vector(earth_vector)
+        azimuth = int(math.atan2(earth_vector[0], earth_vector[2]) * 180/math.pi)
+        altitude = int(math.asin(earth_vector[1]) * 180/math.pi)
+        # math.atan2(earth_vector[1], earth_vector[2]) * 180/math.pi)
+        display_string = F' E: <{azimuth}, {altitude}>'
         screen.addstr(20, 2, display_string, curses.A_BOLD)
         # Display Mission Time (days passed)
         display_string = F' T: {int((self.game.time*TICK_SECONDS)/(60*60*24))} days'
         display_string += ' '*(22-len(display_string))
         screen.addstr(21, 2, display_string, curses.A_BOLD)
 
+        display_string += ' '*(21-len(display_string))
     # - HUD Graphic ----------------------------------
     hud = [
         '       /                                                                \       ',
