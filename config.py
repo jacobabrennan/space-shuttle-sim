@@ -1,6 +1,11 @@
 
 
 # = Project Constants =========================================================
+"""
+Defined herein are the various constants used throughout the game, centralized
+for consistency and ease of modification.
+"""
+
 
 # - Dependencies ---------------------------------
 # Python Modules
@@ -35,6 +40,7 @@ COMMAND_ROLL_CLOCKWISE = 32
 COMMAND_FORWARD = 64
 COMMAND_BACK = 128
 COMMAND_PRIMARY = 256
+COMMAND_STABILIZE = 512
 
 # - Player Vehicle Metrics -----------------------
 SHIP_TURNING_ANGLE = math.pi / 360

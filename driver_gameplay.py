@@ -1,6 +1,19 @@
 
 
 # = Gameplay Screen ===========================================================
+"""
+The gameplay screen is in active development and its full behavior hasn't
+solidified yet. It lacks proper structure and documentation. Be warned.
+
+The gameplay screen handles display when the player is in the main "spaceship"
+gameplay mode. It consists of two sub-drivers, the starfield and cockpit
+drivers. The Starfield is responsible for projecting the 3D game world onto the
+2D terminal screen, while the Cockpit draws a Heads Up Display (HUD) over it.
+
+Together, these objects are responsible for the majority of the user's
+experience with the game.
+"""
+
 
 # - Dependencies ---------------------------------
 # Python Modules
@@ -100,7 +113,7 @@ class Starfield(Driver):
             math.atan2(relative_position[1], relative_position[0]),
             absolute_distance,
         )
-        angular_radius = math.pi/2 - math.acos(min(1,particle.radius/absolute_distance))
+        angular_radius = math.pi/2 - math.acos(min(1, particle.radius/absolute_distance))
         return (polar_coordinates, angular_radius, particle)
 
     def draw_disc(self, screen, disc):
@@ -134,7 +147,7 @@ class Starfield(Driver):
     def draw_point(self, screen, pixel_x, pixel_y, pixel_radius, depth, particle):
         char_x = pixel_x / CHARACTER_WIDTH
         char_y = pixel_y / CHARACTER_HEIGHT
-        close = (depth < 1/2*AU)
+        close = (depth < 2*AU)
         sprite = '·'
         if(pixel_radius < 1):
             sprite = '·'
@@ -225,12 +238,7 @@ class Starfield(Driver):
                 # Draw the appropriate character
                 if(sprite_sides):
                     sprite = self.sprite_sides[sprite_sides]
-                    # if(sprite_sides == 15):
-                    #     self.draw_sprite(screen, pos_x, pos_y, sprite, curses.A_REVERSE | curses.A_BOLD)
-                    #     # sprite = disc[2].sprite(
-                    #     #     pixel_radius,
-                    #     #     vector_between(disc[0], center)
-                    #     # )
+                    # if(sprite_sides == 15): draw some texture
                     self.draw_sprite(screen, pos_x, pos_y, sprite)
 
     sprite_sides = [
@@ -253,6 +261,9 @@ class Cockpit(Driver):
 
     # - Display Functions ----------------------------
     def display(self, screen):
+        ship = self.game.ship
+        starboard = vector_product(ship.bearing, ship.attitude)
+        axes = (starboard, ship.attitude, ship.bearing)
         # Draw HUD background graphic
         for pos_y in range(len(self.hud)):
             line = self.hud[pos_y]
@@ -261,21 +272,12 @@ class Cockpit(Driver):
                 if(character is ' '):
                     continue
                 screen.addstr(pos_y, pos_x, character)
-        # Display Vector (bearing)
-        # pos_x = int(self.game.ship.bearing[0]*100)
-        # pos_y = int(self.game.ship.bearing[1]*100)
-        # pos_z = int(self.game.ship.bearing[2]*100)
-        # display_string = F' V: <{pos_x}, {pos_y}, {pos_z}>'
-        # display_string += ' '*(20-len(display_string))
-        # screen.addstr(19, 2, display_string, curses.A_BOLD)
-        starboard = vector_product(self.game.ship.bearing, self.game.ship.attitude)
-        axes = (starboard, self.game.ship.attitude, self.game.ship.bearing)
         # Display Thrust Output
         # Thrust Title
         screen.addstr(15, 62, 'Thruster-Output', curses.A_BOLD)
         # Thrust Orientation Output
         for axis in range(3):  # Pitch, Yaw, and Roll. Skip forward thrust
-            thrust_value = -self.game.ship.fine_control_display[axis]
+            thrust_value = -ship.thrust_display[axis]
             thrust = '|'
             thrust += '>' * math.ceil(thrust_value)
             for char_pos in range(-1, -4, -1):
@@ -286,7 +288,7 @@ class Cockpit(Driver):
             thrust += ' '*(7-len(thrust))
             screen.addstr(16+axis, 71, thrust, curses.A_BOLD)
         # Thrust Main Thruster Output
-        t_width = self.game.ship.main_thruster_output/(MEGA*1000)
+        t_width = ship.main_thruster_output/(MEGA*1000)
         t_width = math.atan(t_width) / (math.pi/2)
         sprite = '«'
         if(t_width < 0):
@@ -304,13 +306,13 @@ class Cockpit(Driver):
         # Velocity vector (in terms of direction facing)
         screen.addstr(19, 61, '  Bearing ', curses.A_BOLD)
         velocity_vector = transform_coordinate_system(
-            self.game.ship.velocity, (0, 0, 0), axes,
+            ship.velocity, (0, 0, 0), axes,
         )
         velocity_magnitude = magnitude(velocity_vector)
         relative_bearing_vector = unit_vector(velocity_vector)
-        azimuth = int(math.atan2(velocity_vector[0], velocity_vector[2]) * 180/math.pi)
-        altitude = int(math.asin(relative_bearing_vector[1]) * 180/math.pi)
-        display_string = F'  {azimuth}° {altitude}°'
+        azimuth = math.atan2(velocity_vector[0], velocity_vector[2]) * 180/math.pi
+        altitude = math.asin(relative_bearing_vector[1]) * 180/math.pi
+        display_string = F'  {int(azimuth)}° {int(altitude)}°'
         display_string += ' '*(17-len(display_string))
         screen.addstr(20, 61, display_string, curses.A_BOLD)
         display_string = ' {:.3e} km/s'.format(velocity_magnitude)
@@ -318,12 +320,12 @@ class Cockpit(Driver):
         screen.addstr(21, 62, display_string, curses.A_BOLD)
         # Display Gravitational Reference Info
         screen.addstr(18, 3, 'Reference-Frame', curses.A_BOLD)
-        if(not self.game.ship.gravitational_reference):
+        if(not ship.gravitational_reference):
             return
-        reference_point = self.game.ship.gravitational_reference[0]
+        reference_point = ship.gravitational_reference[0]
         reference_vector = transform_coordinate_system(
             reference_point.position,
-            self.game.ship.position,
+            ship.position,
             axes,
         )
         # G.Ref. Name
@@ -345,13 +347,14 @@ class Cockpit(Driver):
         screen.addstr(21, 2, display_string, curses.A_BOLD)
         # G.Ref. Azimuth and Altitude (vector to reference)
         reference_vector = unit_vector(reference_vector)
-        azimuth = int(math.atan2(reference_vector[0], reference_vector[2]) * 180/math.pi)
-        altitude = int(math.asin(reference_vector[1]) * 180/math.pi)
-        display_string = F' V: {azimuth}° {altitude}°'
+        azimuth = math.atan2(reference_vector[0], reference_vector[2]) * 180/math.pi
+        altitude = math.asin(reference_vector[1]) * 180/math.pi
+        display_string = F' V: {int(azimuth)}° {int(altitude)}°'
         display_string += ' '*(21-len(display_string))
         screen.addstr(20, 2, display_string, curses.A_BOLD)
         # # Display Mission Time (days passed)
-        # display_string = F' T: {int((self.game.time*TICK_SECONDS)/(60*60*24))} days'
+        # display_string =
+        #  F' T: {int((self.game.time*TICK_SECONDS)/(60*60*24))} days'
         # display_string += ' '*(22-len(display_string))
         # screen.addstr(21, 2, display_string, curses.A_BOLD)
         # display_string += ' '*(21-len(display_string))

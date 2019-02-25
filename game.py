@@ -1,6 +1,13 @@
 
 
 # = Game Singleton ============================================================
+"""
+The Game class is a singleton and must be accessed via the get_game function.
+The game object handles all game logic and the game loop. It's main purpose is
+to create the game world and to call each particle's take_turn method every
+game loop iteration.
+"""
+
 
 # - Dependencies ---------------------------------
 # Python Modules
@@ -22,6 +29,10 @@ game = None
 
 
 def get_game(*args):
+    """
+    Retrieves the game singleton.
+    The Game class should not be instanced directly.
+    """
     global game
     # Generate a game if necessary
     if(game is None):
@@ -32,6 +43,12 @@ def get_game(*args):
 
 # - Game Object ----------------------------------
 class Game:
+    """
+    The Game class is a singleton and should be accessed via the get_game
+    function. The game object manages logic for all gameplay objects, such
+    as stars and the player vehicle.
+    """
+
     def __init__(self, screen):
         super().__init__()
         self.time = None
@@ -58,29 +75,18 @@ class Game:
         thread_game.start()
 
     def iterate(self, player_command):
+        """
+        Executes game behavior for each game loop iteration.
+        Its primary functions are to increase game time, route player commands
+        to controllable game objects, and instruct each game object to perform
+        its own turn taking behavior.
+        """
         if(self.time is None):
             return
         self.time += 1
         # Handle ship controls (player commands)
         S = self.ship
-        R = SHIP_TURNING_ANGLE
-        accelleration = 100
-        if(player_command == COMMAND_UP):
-            S.pitch(-R)
-        elif(player_command == COMMAND_DOWN):
-            S.pitch(R)
-        elif(player_command == COMMAND_LEFT):
-            S.yaw(R)
-        elif(player_command == COMMAND_RIGHT):
-            S.yaw(-R)
-        elif(player_command == COMMAND_ROLL_ANTICLOCK):
-            S.roll(R)
-        elif(player_command == COMMAND_ROLL_CLOCKWISE):
-            S.roll(-R)
-        elif(player_command == COMMAND_FORWARD):
-            S.increase_thrust(1000*S.mass)
-        elif(player_command == COMMAND_BACK):
-            S.increase_thrust(-1000*S.mass)
+        S.player_control(player_command)
         # Move all particles
         for particle in self.particles:
             particle.take_turn(self.time)
@@ -89,6 +95,11 @@ class Game:
                     vehicle.feel_gravity(particle, TICK_SECONDS)
 
     def start(self):
+        """
+        BANG!
+        Generates the Cosmos, the player's vehicle, and all other game objects
+        necessary to start the game.
+        """
         self.time = 0
         # Populate cosmos
         self.particles = []
@@ -138,18 +149,27 @@ class Game:
         theta = random()*math.pi*2
         pos_x = math.cos(theta)
         pos_y = math.sin(theta)
-        new_particle = Particle((pos_x*57909050*KILO, 0, pos_y*57909050*KILO), 2439.7*KILO, mass=3.3011e+23)
+        new_particle = Particle(
+            (pos_x*57909050*KILO, 0, pos_y*57909050*KILO),
+            2439.7*KILO,
+            mass=3.3011e+23)
         self.particles.append(new_particle)
         new_particle.label = 'Mercury'
         # Venus
         pass
         # Earth
-        new_particle = Particle((AU, 0, (384399*KILO)/2), 6371*KILO, mass=5.972e+24)
+        new_particle = Particle(
+            (AU, 0, (384399*KILO)/2),
+            6371*KILO,
+            mass=5.972e+24)
         self.particles.append(new_particle)
         self.earth = new_particle
         new_particle.label = 'Earth'
         # Moon
-        new_particle = Particle((AU, 0, -(384399*KILO)/2), 1737.1*KILO, mass=7.342e+22)
+        new_particle = Particle(
+            (AU, 0, -(384399*KILO)/2),
+            1737.1*KILO,
+            mass=7.342e+22)
         self.particles.append(new_particle)
         # Mars
         pass

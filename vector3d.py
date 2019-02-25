@@ -1,6 +1,11 @@
 
 
 # = Positions and Vectors =====================================================
+"""
+Vector math, projection, and compositing. For use in 3D rendering and
+navigation.
+"""
+
 
 # - Dependencies ---------------------------------
 # Python Modules

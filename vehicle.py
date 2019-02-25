@@ -1,6 +1,18 @@
 
 
 # = Vehicle ===================================================================
+"""
+Vehicles represent dynamic manmade game objects, contrasting with the static
+spherical objects in the cosmos. The player's avatar in the game is a basic
+vehicle, which they can move around and point in any direction. In the future,
+more vehicle types may be added, such as the ISS. This would allowing the
+player to view other vehicles while in "space travel" mode, as well as possibly
+changing vehicles or game modes entirely.
+
+The directions of "Forward" and "Up" on the user's screen correspond with the
+vehicles "bearing" and "attitude" vectors.
+"""
+
 
 # - Dependencies ---------------------------------
 # Python Modules
@@ -12,7 +24,14 @@ from particle import Particle
 import game
 
 
+# - Definition and Initialization ----------------
 class Vehicle(Particle):
+    """
+    A vehicle which can change its position, and orientation through all three
+    dimensions, velocity, and angular velocity. Vehicles experience the
+    gravitational attraction of massive object. Vehicles can be controlled by
+    player commands, via the player_control method.
+    """
 
     def __init__(self, position=(0, 0, 0)):
         super().__init__(position)
@@ -23,11 +42,35 @@ class Vehicle(Particle):
         self.attitude = (0, 1, 0)
         self.radius = -1  # Quirk so ship is "behind" viewpoint.
         self.gravitational_reference = None
-        self.fine_control_display = [0, 0, 0]
+        self.thrust_display = [0, 0, 0]
         self.main_thruster_output = 0
         the_game = game.get_game()
         the_game.vehicles.append(self)
 
+    # - Player Controls ------------------------------
+    def player_control(self, command):
+        """Exposes control of the ship's state to player commands."""
+        R = SHIP_TURNING_ANGLE
+        if(command is None):
+            return
+        if(command & COMMAND_UP):
+            self.pitch(-R)
+        if(command & COMMAND_DOWN):
+            self.pitch(R)
+        if(command & COMMAND_LEFT):
+            self.yaw(R)
+        if(command & COMMAND_RIGHT):
+            self.yaw(-R)
+        if(command & COMMAND_ROLL_ANTICLOCK):
+            self.roll(R)
+        if(command & COMMAND_ROLL_CLOCKWISE):
+            self.roll(-R)
+        if(command & COMMAND_FORWARD):
+            self.increase_thrust(1000*self.mass)
+        if(command & COMMAND_BACK):
+            self.increase_thrust(-1000*self.mass)
+
+    # - Thrust Controls ------------------------------
     def increase_thrust(self, force):
         """Adjusts the current (ongoing) output of the main thrusters."""
         self.main_thruster_output += force
@@ -39,7 +82,7 @@ class Vehicle(Particle):
             self.angular_velocity[1],
             self.angular_velocity[2],
         )
-        self.fine_control_display[0] += radians/SHIP_TURNING_ANGLE
+        self.thrust_display[0] += radians/SHIP_TURNING_ANGLE
 
     def yaw(self, radians):
         """Adjusts angular velocity about the Y/vertical axis."""
@@ -48,7 +91,7 @@ class Vehicle(Particle):
             self.angular_velocity[1]+radians,
             self.angular_velocity[2],
         )
-        self.fine_control_display[1] += radians/SHIP_TURNING_ANGLE
+        self.thrust_display[1] += radians/SHIP_TURNING_ANGLE
 
     def roll(self, radians):
         """Adjusts angular velocity about the Z/forward axis."""
@@ -57,8 +100,9 @@ class Vehicle(Particle):
             self.angular_velocity[1],
             self.angular_velocity[2]+radians,
         )
-        self.fine_control_display[2] += radians/SHIP_TURNING_ANGLE
+        self.thrust_display[2] += radians/SHIP_TURNING_ANGLE
 
+    # - Instant bearing and velocity adjustment ------
     def thrust(self, force, time_interval):
         """
         Changes instantaneous velocity by Accelerating the vehicle along its
@@ -99,7 +143,9 @@ class Vehicle(Particle):
             scale_vector(self.attitude, math.sin(radians+math.pi/2)),
         )
 
+    # - Behavior Over Time ---------------------------
     def take_turn(self, game_time):
+        """Determines how the vehicle behaves every game loop iteration."""
         # Apply Thrust
         if(self.main_thruster_output):
             self.thrust(self.main_thruster_output, game_time)
@@ -112,15 +158,17 @@ class Vehicle(Particle):
             self.adjust_roll(self.angular_velocity[2])
         # Apply translations
         self.position = vector_addition(self.position, self.velocity)
-        # Decay fine_control_display
-        _x = self.fine_control_display[0]
-        _y = self.fine_control_display[1]
-        _z = self.fine_control_display[2]
-        self.fine_control_display[0] = math.copysign(min(3, max(0, abs(_x)-0.2)), _x)
-        self.fine_control_display[1] = math.copysign(min(3, max(0, abs(_y)-0.2)), _y)
-        self.fine_control_display[2] = math.copysign(min(3, max(0, abs(_z)-0.2)), _z)
+        # Decay thrust_display
+        _x = self.thrust_display[0]
+        _y = self.thrust_display[1]
+        _z = self.thrust_display[2]
+        self.thrust_display[0] = math.copysign(min(3, max(0, abs(_x)-0.2)), _x)
+        self.thrust_display[1] = math.copysign(min(3, max(0, abs(_y)-0.2)), _y)
+        self.thrust_display[2] = math.copysign(min(3, max(0, abs(_z)-0.2)), _z)
 
+    # - Gravity --------------------------------------
     def feel_gravity(self, particle, time_interval):
+        """Applies gravitational force to the vehicle over the given time."""
         if(not self.mass or self is particle):
             return
         # Fgrav = G * ( (m1*m2) / (r**2) )
@@ -132,7 +180,10 @@ class Vehicle(Particle):
         )
         A = f_grav/self.mass
         V = A * time_interval
-        V = scale_vector(unit_vector(vector_between(self.position, particle.position)), V)
+        V = scale_vector(
+            unit_vector(vector_between(self.position, particle.position)),
+            V,
+        )
         self.velocity = vector_addition(self.velocity, V)
         # Set gravitational reference
         if(

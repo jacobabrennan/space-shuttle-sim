@@ -1,6 +1,15 @@
 
 
 # = Client Singleton ==========================================================
+"""
+The Client class is a singleton and must be accessed via the get_client
+function. The client object represents the interface through which the player
+interacts with the game. It is implemented as a hierarchy of driver objects,
+each of which manages a different mode of gameplay. The central client handles
+the routing of commands and delegates drawing to the sub-drivers.
+
+The curses library is used extensively for both input and output.
+"""
 
 # - Dependencies ---------------------------------
 # Python Modules
@@ -8,29 +17,20 @@ import threading
 import curses
 # Local Modules
 from config import *
+from bindings import KEY_BINDINGS
 from driver import Driver
 from driver_title import Title
 
-# - Project Constants ----------------------------
-KEY_BINDINGS = {
-    curses.KEY_UP: COMMAND_FORWARD,
-    curses.KEY_DOWN: COMMAND_BACK,
-    curses.KEY_RIGHT: COMMAND_RIGHT,
-    curses.KEY_LEFT: COMMAND_LEFT,
-    ord('w'): COMMAND_UP,
-    ord('s'): COMMAND_DOWN,
-    ord('d'): COMMAND_RIGHT,
-    ord('a'): COMMAND_LEFT,
-    ord('e'): COMMAND_ROLL_CLOCKWISE,
-    ord('q'): COMMAND_ROLL_ANTICLOCK,
-    ord(' '): COMMAND_PRIMARY,
-}
 
 # - Client access function -----------------------
 client = None
 
 
 def get_client(*arguments):
+    """
+    Retrieves the client singleton.
+    The Client class should not be instanced directly.
+    """
     global client
     # Generate a client if necessary
     if(client is None and arguments[0]):
@@ -41,6 +41,13 @@ def get_client(*arguments):
 
 # - Definition and initialization ----------------
 class Client(Driver):
+    """
+    The Client class is a singleton and should be accessed via the get_client
+    function. The client object manages all input and output via the curses
+    library. The client is implemented as a hierarchy of "driver" objects, each
+    managing input and output for a distinct aspect of gameplay.
+    """
+
     def __init__(self, screen):
         super().__init__()
         self.key_command = None
@@ -70,14 +77,17 @@ class Client(Driver):
 
     # - Keyboard handling ----------------------------
     def command(self, which):
+        """Routes player commands to the appropriate sub-driver."""
         self.key_command = which
         return super().command(which)
 
     def key_clear(self):
+        """Clears all pressed keys so commands don't recur."""
         self.key_command = None
 
     # - Display --------------------------------------
     def display(self, screen, *args):
+        """Clears the screen delegates drawing to the focused sub-driver."""
         screen.clear()
         # Do own drawing first, then draw children on top
         # Draw Children

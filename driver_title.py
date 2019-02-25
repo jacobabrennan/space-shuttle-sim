@@ -1,6 +1,12 @@
 
 
 # = Title Screen ==============================================================
+"""
+The titlescreen is a driver which is displayed as soon as the user starts the
+game. It displays a large title graphic, an animated starfield effect, and
+instructions for how to initiate gameplay.
+"""
+
 
 # - Dependencies ---------------------------------
 # Python Modules
@@ -15,6 +21,11 @@ import game
 
 
 class Title(Driver):
+    """
+    The user interface displayed when the user first executes the program.
+    It displays an animated starfield effect, and allows the user to start the
+    game.
+    """
 
     # - Initialization -------------------------------
     def __init__(self):
@@ -24,15 +35,17 @@ class Title(Driver):
 
     # - Interaction ----------------------------------
     def command(self, which):
+        """Listens for player commands to start the game."""
         # Check for blocking children
         block = super().command(which)
         if(block):
             return block
         # Handle Start Game
-        if(which is COMMAND_PRIMARY):
+        if(which & COMMAND_PRIMARY):
             self.new_game()
 
     def new_game(self):
+        """Starts a new game and transfers focus to the gameplay driver."""
         the_client = client.get_client()
         the_client.focus(Gameplay())
         the_game = game.get_game()
@@ -40,6 +53,7 @@ class Title(Driver):
 
     # - Display --------------------------------------
     def display(self, screen, *args):
+        """Draws the title graphic and moving star field."""
         # Check for blocking children
         block = super().display(screen, *args)
         if(block):
@@ -75,12 +89,14 @@ class Title(Driver):
         return True
 
     class Star:
+        """Individual particles in the titlescreen starfield effect."""
         def __init__(self):
             self.x = random.random() - 1/2
             self.y = random.random() - 1/2
             self.z = 1
 
     def star_field(self):
+        """Generates initial starfield for titlescreen special effect."""
         self.stars = []
         for index in range(1, 100):
             new_star = self.Star()
@@ -88,6 +104,7 @@ class Title(Driver):
             self.stars.append(new_star)
 
     def star_advance(self, screen):
+        """Moves all stars toward the user for an animated starfield effect."""
         old_stars = list(self.stars)
         for star in old_stars:
             display_x = star.x / star.z
