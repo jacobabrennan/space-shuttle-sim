@@ -4,6 +4,7 @@
 
 # - Dependencies ---------------------------------
 # Python Modules
+import math
 # Local Modules
 
 # - Notes ----------------------------------------
@@ -35,6 +36,9 @@ COMMAND_FORWARD = 64
 COMMAND_BACK = 128
 COMMAND_PRIMARY = 256
 
+# - Player Vehicle Metrics -----------------------
+SHIP_TURNING_ANGLE = math.pi / 360
+
 # - Timing and delays ----------------------------
 TIME_GAME_TICK = 1/30  # Delay between game loop iterations, in seconds
 
@@ -49,7 +53,7 @@ GIGA = 1000*MEGA
 TERA = 1000*GIGA
 AU = 149597870700
 LY = 9.46*TERA*KILO
-
+PARSEC = 30856775814913700
 
 # - Messages and Strings -------------------------
 MESSAGE_SCREEN_SIZE_CONDITION_NOT_MET = (

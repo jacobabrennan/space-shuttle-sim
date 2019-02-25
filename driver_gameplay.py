@@ -105,13 +105,13 @@ class Starfield(Driver):
 
     def draw_disc(self, screen, disc):
         # Disc Tuple has form: (polar_coords, angular_radius, particle)
-        meters_to_pixels = SCREEN_PIXEL_WIDTH/(SCREEN_PHYSICAL_WIDTH/2)
+        meters_to_pixels = SCREEN_PIXEL_WIDTH/(SCREEN_PHYSICAL_WIDTH)
         pixel_radius = disc[1]*meters_to_pixels
         pixel_x = math.cos(disc[0][1])*disc[0][0]*meters_to_pixels
         pixel_y = math.sin(disc[0][1])*disc[0][0]*meters_to_pixels
         # Draw point-like disc (Degenerate case 1)
         if(pixel_radius < CHARACTER_WIDTH):
-            self.draw_point(screen, pixel_x, pixel_y, pixel_radius, disc[0][2])
+            self.draw_point(screen, pixel_x, pixel_y, pixel_radius, disc[0][2], disc[2])
             return
         # Draw planet surface (Degenerate case 2)
         if(disc[0][0] > math.pi):
@@ -131,7 +131,7 @@ class Starfield(Driver):
         """Sort drawing order by depth. Used by self.display."""
         return -(disc[0][2])
 
-    def draw_point(self, screen, pixel_x, pixel_y, pixel_radius, depth):
+    def draw_point(self, screen, pixel_x, pixel_y, pixel_radius, depth, particle):
         char_x = pixel_x / CHARACTER_WIDTH
         char_y = pixel_y / CHARACTER_HEIGHT
         close = (depth < 1/2*AU)
@@ -152,6 +152,12 @@ class Starfield(Driver):
             self.draw_sprite(screen, char_x, char_y, sprite, curses.A_BOLD)
         else:
             self.draw_sprite(screen, char_x, char_y, sprite, curses.A_DIM)
+        #
+        if(particle.label):
+            offset = 0
+            for char in particle.label:
+                self.draw_sprite(screen, char_x+1+offset, char_y+1, char)
+                offset += 1
 
     def draw_circle(self, screen, pixel_x, pixel_y, pixel_radius):
         # Get edges of disc bounding rectangle
@@ -262,34 +268,94 @@ class Cockpit(Driver):
         # display_string = F' V: <{pos_x}, {pos_y}, {pos_z}>'
         # display_string += ' '*(20-len(display_string))
         # screen.addstr(19, 2, display_string, curses.A_BOLD)
-        # Display Vector to Earth
-        earth_vector = transform_coordinate_system(
-            self.game.earth.position,
-            self.game.ship.position,
-            (
-                vector_product(self.game.ship.bearing, self.game.ship.attitude),
-                self.game.ship.attitude,
-                self.game.ship.bearing,
-            )
+        starboard = vector_product(self.game.ship.bearing, self.game.ship.attitude)
+        axes = (starboard, self.game.ship.attitude, self.game.ship.bearing)
+        # Display Thrust Output
+        # Thrust Title
+        screen.addstr(15, 62, 'Thruster-Output', curses.A_BOLD)
+        # Thrust Orientation Output
+        for axis in range(3):  # Pitch, Yaw, and Roll. Skip forward thrust
+            thrust_value = -self.game.ship.fine_control_display[axis]
+            thrust = '|'
+            thrust += '>' * math.ceil(thrust_value)
+            for char_pos in range(-1, -4, -1):
+                sprite = '<'
+                if(char_pos < math.floor(thrust_value)):
+                    sprite = ' '
+                thrust = sprite + thrust
+            thrust += ' '*(7-len(thrust))
+            screen.addstr(16+axis, 71, thrust, curses.A_BOLD)
+        # Thrust Main Thruster Output
+        t_width = self.game.ship.main_thruster_output/(MEGA*1000)
+        t_width = math.atan(t_width) / (math.pi/2)
+        sprite = '«'
+        if(t_width < 0):
+            sprite = '»'
+            t_width = abs(t_width)
+        thrust_string = sprite * math.ceil(t_width*12)
+        thrust_string = ' '*(12-len(thrust_string))+thrust_string+':'
+        screen.addstr(16, 58, thrust_string, curses.A_BOLD)
+        thrust_string = sprite * math.ceil(t_width*13)
+        thrust_string = ' '*(13-len(thrust_string))+thrust_string+':'
+        screen.addstr(17, 57, thrust_string, curses.A_BOLD)
+        # thrust_string = sprite * math.ceil(t_width*14)
+        # thrust_string = ' '*(14-len(thrust_string))+thrust_string+':'
+        # screen.addstr(18, 56, thrust_string, curses.A_BOLD)
+        # Velocity vector (in terms of direction facing)
+        screen.addstr(19, 61, '  Bearing ', curses.A_BOLD)
+        velocity_vector = transform_coordinate_system(
+            self.game.ship.velocity, (0, 0, 0), axes,
         )
-        #
-        earth_distance = magnitude(earth_vector) - self.game.earth.radius
-        display_string = F' D: {int(earth_distance)}'
-        display_string += ' '*(21-len(display_string))
-        screen.addstr(20, 2, display_string, curses.A_BOLD)
-        #
-        earth_vector = unit_vector(earth_vector)
-        azimuth = int(math.atan2(earth_vector[0], earth_vector[2]) * 180/math.pi)
-        altitude = int(math.asin(earth_vector[1]) * 180/math.pi)
-        display_string = F' E: <{azimuth}, {altitude}>'
-        display_string += ' '*(20-len(display_string))
-        screen.addstr(19, 2, display_string, curses.A_BOLD)
-        # Display Mission Time (days passed)
-        display_string = F' T: {int((self.game.time*TICK_SECONDS)/(60*60*24))} days'
+        velocity_magnitude = magnitude(velocity_vector)
+        relative_bearing_vector = unit_vector(velocity_vector)
+        azimuth = int(math.atan2(velocity_vector[0], velocity_vector[2]) * 180/math.pi)
+        altitude = int(math.asin(relative_bearing_vector[1]) * 180/math.pi)
+        display_string = F'  {azimuth}° {altitude}°'
+        display_string += ' '*(17-len(display_string))
+        screen.addstr(20, 61, display_string, curses.A_BOLD)
+        display_string = ' {:.3e} km/s'.format(velocity_magnitude)
+        display_string += ' '*(16-len(display_string))
+        screen.addstr(21, 62, display_string, curses.A_BOLD)
+        # Display Gravitational Reference Info
+        screen.addstr(18, 3, 'Reference-Frame', curses.A_BOLD)
+        if(not self.game.ship.gravitational_reference):
+            return
+        reference_point = self.game.ship.gravitational_reference[0]
+        reference_vector = transform_coordinate_system(
+            reference_point.position,
+            self.game.ship.position,
+            axes,
+        )
+        # G.Ref. Name
+        reference_name = ' '+(reference_point.label or "Unknown Body")
+        reference_name += ' '*(20-len(reference_name))
+        screen.addstr(19, 2, reference_name, curses.A_BOLD)
+        # G.Ref. Distance
+        reference_distance = magnitude(reference_vector) - reference_point.radius
+        if(reference_distance >= AU*10000):
+            reference_distance /= LY
+            display_string = ' D: {:.3f} ly'.format(reference_distance)
+        elif(reference_distance >= AU):
+            reference_distance /= AU
+            display_string = ' D: {:.3f} au'.format(reference_distance)
+        else:
+            reference_distance /= 1000
+            display_string = ' D: {:.3e} km'.format(reference_distance)
         display_string += ' '*(22-len(display_string))
         screen.addstr(21, 2, display_string, curses.A_BOLD)
-
+        # G.Ref. Azimuth and Altitude (vector to reference)
+        reference_vector = unit_vector(reference_vector)
+        azimuth = int(math.atan2(reference_vector[0], reference_vector[2]) * 180/math.pi)
+        altitude = int(math.asin(reference_vector[1]) * 180/math.pi)
+        display_string = F' V: {azimuth}° {altitude}°'
         display_string += ' '*(21-len(display_string))
+        screen.addstr(20, 2, display_string, curses.A_BOLD)
+        # # Display Mission Time (days passed)
+        # display_string = F' T: {int((self.game.time*TICK_SECONDS)/(60*60*24))} days'
+        # display_string += ' '*(22-len(display_string))
+        # screen.addstr(21, 2, display_string, curses.A_BOLD)
+        # display_string += ' '*(21-len(display_string))
+
     # - HUD Graphic ----------------------------------
     hud = [
         '       /                                                                \       ',
@@ -307,13 +373,13 @@ class Cockpit(Driver):
         '          \ \                                                      / /          ',
         '           \ \          \                              /          / /           ',
         '------------\-------------\                          /-------------/------------',
-        '             \             \                        /             /             ',
-        '              \             \______________________/             /              ',
-        '               \                                                /               ',
-        ' +-------------------x                                    x-------------------+ ',
-        ' |                    \                                  /                    | ',
-        ' |                     \                                /                     | ',
-        ' |                      \                              /                      | ',
-        ' |______________________/                              \______________________| ',
-        '                  /                                          \                  ',
+        '             \             \                        /     x-------------------+ ',
+        '              \             \______________________/     /                    | ',
+        '               \                                        /                     | ',
+        ' +-------------------x                                  \______________       | ',
+        ' |                    \                                     /          \______| ',
+        ' |                     \                                    \                 | ',
+        ' |                      \                                    \                | ',
+        ' |______________________/                                     \_______________| ',
+        '                                                                                ',
     ]

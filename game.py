@@ -63,31 +63,30 @@ class Game:
         self.time += 1
         # Handle ship controls (player commands)
         S = self.ship
-        A = S.angular_velocity
-        R = math.pi / 360
+        R = SHIP_TURNING_ANGLE
         accelleration = 100
         if(player_command == COMMAND_UP):
-            S.angular_velocity = (A[0]-R, A[1], A[2])
+            S.pitch(-R)
         elif(player_command == COMMAND_DOWN):
-            S.angular_velocity = (A[0]+R, A[1], A[2])
+            S.pitch(R)
         elif(player_command == COMMAND_LEFT):
-            S.angular_velocity = (A[0], A[1]+R, A[2])
+            S.yaw(R)
         elif(player_command == COMMAND_RIGHT):
-            S.angular_velocity = (A[0], A[1]-R, A[2])
+            S.yaw(-R)
         elif(player_command == COMMAND_ROLL_ANTICLOCK):
-            S.angular_velocity = (A[0], A[1], A[2]+R)
+            S.roll(R)
         elif(player_command == COMMAND_ROLL_CLOCKWISE):
-            S.angular_velocity = (A[0], A[1], A[2]-R)
+            S.roll(-R)
         elif(player_command == COMMAND_FORWARD):
-            S.velocity = scale_vector(S.bearing, max(accelleration, magnitude(S.velocity)*2))
+            S.increase_thrust(1000*S.mass)
         elif(player_command == COMMAND_BACK):
-            S.velocity = scale_vector(S.bearing, 0) #magnitude(S.velocity)-accelleration)
-            S.angular_velocity = (0, 0, 0)
+            S.increase_thrust(-1000*S.mass)
         # Move all particles
         for particle in self.particles:
             particle.take_turn(self.time)
             if(particle.mass):
-                particle.exert_gravity(self.vehicles, TICK_SECONDS)
+                for vehicle in self.vehicles:
+                    vehicle.feel_gravity(particle, TICK_SECONDS)
 
     def start(self):
         self.time = 0
@@ -134,18 +133,21 @@ class Game:
         # Sun
         new_particle = Particle((0, 0, 0), 695000*KILO, mass=1.9885e+30)
         self.particles.append(new_particle)
+        new_particle.label = 'Sol'
         # Mercury
         theta = random()*math.pi*2
         pos_x = math.cos(theta)
         pos_y = math.sin(theta)
         new_particle = Particle((pos_x*57909050*KILO, 0, pos_y*57909050*KILO), 2439.7*KILO, mass=3.3011e+23)
         self.particles.append(new_particle)
+        new_particle.label = 'Mercury'
         # Venus
         pass
         # Earth
         new_particle = Particle((AU, 0, (384399*KILO)/2), 6371*KILO, mass=5.972e+24)
         self.particles.append(new_particle)
         self.earth = new_particle
+        new_particle.label = 'Earth'
         # Moon
         new_particle = Particle((AU, 0, -(384399*KILO)/2), 1737.1*KILO, mass=7.342e+22)
         self.particles.append(new_particle)
