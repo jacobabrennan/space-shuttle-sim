@@ -44,6 +44,7 @@ class Vehicle(Particle):
         self.gravitational_reference = None
         self.thrust_display = [0, 0, 0]
         self.main_thruster_output = 0
+        self.stabilizing = False
         the_game = game.get_game()
         the_game.vehicles.append(self)
 
@@ -54,21 +55,31 @@ class Vehicle(Particle):
         if(command is None):
             return
         if(command & COMMAND_UP):
+            self.stabilizing = False
             self.pitch(-R)
         if(command & COMMAND_DOWN):
+            self.stabilizing = False
             self.pitch(R)
         if(command & COMMAND_LEFT):
+            self.stabilizing = False
             self.yaw(R)
         if(command & COMMAND_RIGHT):
+            self.stabilizing = False
             self.yaw(-R)
         if(command & COMMAND_ROLL_ANTICLOCK):
+            self.stabilizing = False
             self.roll(R)
         if(command & COMMAND_ROLL_CLOCKWISE):
+            self.stabilizing = False
             self.roll(-R)
         if(command & COMMAND_FORWARD):
+            self.stabilizing = False
             self.increase_thrust(1000*self.mass)
         if(command & COMMAND_BACK):
+            self.stabilizing = False
             self.increase_thrust(-1000*self.mass)
+        if(command & COMMAND_STABILIZE):
+            self.stabilizing = True
 
     # - Thrust Controls ------------------------------
     def increase_thrust(self, force):
@@ -77,6 +88,8 @@ class Vehicle(Particle):
 
     def pitch(self, radians):
         """Adjusts angular velocity about the X/lateral axis."""
+        if(not radians):
+            return
         self.angular_velocity = (
             self.angular_velocity[0]+radians,
             self.angular_velocity[1],
@@ -86,6 +99,8 @@ class Vehicle(Particle):
 
     def yaw(self, radians):
         """Adjusts angular velocity about the Y/vertical axis."""
+        if(not radians):
+            return
         self.angular_velocity = (
             self.angular_velocity[0],
             self.angular_velocity[1]+radians,
@@ -95,12 +110,71 @@ class Vehicle(Particle):
 
     def roll(self, radians):
         """Adjusts angular velocity about the Z/forward axis."""
+        if(not radians):
+            return
         self.angular_velocity = (
             self.angular_velocity[0],
             self.angular_velocity[1],
             self.angular_velocity[2]+radians,
         )
         self.thrust_display[2] += radians/SHIP_TURNING_ANGLE
+
+    def stabilize(self):
+        """
+        Adjusts orientation toward bearing, and then reduces velocity.
+        Used to eliminate precession and to bring the vehicle to a stop.
+        """
+        self.main_thruster_output = 0
+        starboard = vector_product(self.bearing, self.attitude)
+        axes = (starboard, self.attitude, self.bearing)
+        velocity_vector = transform_coordinate_system(
+            self.velocity, (0, 0, 0), axes,
+        )
+        velocity_magnitude = magnitude(velocity_vector)
+        if(velocity_magnitude):
+            unit_velocity_vector = unit_vector(velocity_vector)
+        else:
+            unit_velocity_vector = self.bearing
+        azimuth = math.atan2(velocity_vector[0], velocity_vector[2])
+        altitude = math.asin(unit_velocity_vector[1])
+        #
+        thrust = [0, 0, 0, 0]
+        _x = self.angular_velocity[0]
+        _y = self.angular_velocity[1]
+        _z = self.angular_velocity[2]
+        stable = True
+        if(abs(_x) < SHIP_TURNING_ANGLE):
+            _x = 0
+            self.adjust_pitch(altitude)
+        else:
+            stable = False
+            thrust[0] = (altitude-_x)*0.5
+        if(abs(_y) < SHIP_TURNING_ANGLE):
+            _y = 0
+            self.adjust_yaw(-azimuth)
+        else:
+            stable = False
+            thrust[1] = -(azimuth+_y)*0.5
+        if(abs(_x) < SHIP_TURNING_ANGLE):
+            _z = 0
+        else:
+            stable = False
+            thrust[2] = -_z/2
+        self.angular_velocity = (_x, _y, _z)
+        #
+        self.pitch(thrust[0])
+        self.yaw(thrust[1])
+        self.roll(thrust[2])
+        if(stable):
+            speed = scalar_product(self.velocity, self.bearing)
+            if(velocity_magnitude < 100):
+                stabilizing = False
+                self.velocity = self.bearing
+                thrust[3] = 0
+            else:
+                thrust[3] = -(speed) * self.mass
+                thrust[3] /= TICK_SECONDS
+        self.main_thruster_output = thrust[3]
 
     # - Instant bearing and velocity adjustment ------
     def thrust(self, force, time_interval):
@@ -146,6 +220,9 @@ class Vehicle(Particle):
     # - Behavior Over Time ---------------------------
     def take_turn(self, game_time):
         """Determines how the vehicle behaves every game loop iteration."""
+        # Stabilize
+        if(self.stabilizing):
+            self.stabilize()
         # Apply Thrust
         if(self.main_thruster_output):
             self.thrust(self.main_thruster_output, game_time)
@@ -184,7 +261,7 @@ class Vehicle(Particle):
             unit_vector(vector_between(self.position, particle.position)),
             V,
         )
-        self.velocity = vector_addition(self.velocity, V)
+        # self.velocity = vector_addition(self.velocity, V)
         # Set gravitational reference
         if(
             not self.gravitational_reference or

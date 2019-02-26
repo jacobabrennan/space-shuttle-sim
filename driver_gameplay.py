@@ -269,7 +269,7 @@ class Cockpit(Driver):
             line = self.hud[pos_y]
             for pos_x in range(len(line)):
                 character = line[pos_x]
-                if(character is ' '):
+                if(character == ' '):
                     continue
                 screen.addstr(pos_y, pos_x, character)
         # Display Thrust Output
@@ -309,13 +309,19 @@ class Cockpit(Driver):
             ship.velocity, (0, 0, 0), axes,
         )
         velocity_magnitude = magnitude(velocity_vector)
-        relative_bearing_vector = unit_vector(velocity_vector)
-        azimuth = math.atan2(velocity_vector[0], velocity_vector[2]) * 180/math.pi
-        altitude = math.asin(relative_bearing_vector[1]) * 180/math.pi
+        if(velocity_magnitude):
+            relative_bearing_vector = unit_vector(velocity_vector)
+            azimuth = math.atan2(velocity_vector[0], velocity_vector[2]) * 180/math.pi
+            altitude = math.asin(relative_bearing_vector[1]) * 180/math.pi
+        else:
+            azimuth = 0
+            altitude = 0
         display_string = F'  {int(azimuth)}° {int(altitude)}°'
         display_string += ' '*(17-len(display_string))
         screen.addstr(20, 61, display_string, curses.A_BOLD)
-        display_string = ' {:.3e} km/s'.format(velocity_magnitude)
+        if(velocity_magnitude <= 1):
+            velocity_magnitude = 0
+        display_string = ' {:.3e} km/s'.format(velocity_magnitude/KILO)
         display_string += ' '*(16-len(display_string))
         screen.addstr(21, 62, display_string, curses.A_BOLD)
         # Display Gravitational Reference Info
@@ -346,9 +352,13 @@ class Cockpit(Driver):
         display_string += ' '*(22-len(display_string))
         screen.addstr(21, 2, display_string, curses.A_BOLD)
         # G.Ref. Azimuth and Altitude (vector to reference)
-        reference_vector = unit_vector(reference_vector)
-        azimuth = math.atan2(reference_vector[0], reference_vector[2]) * 180/math.pi
-        altitude = math.asin(reference_vector[1]) * 180/math.pi
+        if(reference_distance):
+            reference_vector = unit_vector(reference_vector)
+            azimuth = math.atan2(reference_vector[0], reference_vector[2]) * 180/math.pi
+            altitude = math.asin(reference_vector[1]) * 180/math.pi
+        else:
+            azimuth = 0
+            altitude = 0
         display_string = F' V: {int(azimuth)}° {int(altitude)}°'
         display_string += ' '*(21-len(display_string))
         screen.addstr(20, 2, display_string, curses.A_BOLD)

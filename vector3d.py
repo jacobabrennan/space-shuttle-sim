@@ -56,7 +56,7 @@ def vector_product(A, B):
 
 def scalar_projection(A, B):
     """Calculates the scalar projection of A onto B."""
-    return scalar_product(A, U) / magnitude(B)
+    return scalar_product(A, B) / magnitude(B)
 
 
 def vector_projection(A, B):
