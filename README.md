@@ -17,10 +17,9 @@ You must have Python version 3 install and configured properly for your system.
 
 ### Controls
 
-Control your spaceship with the keyboard, using these keys:
-
-W+S: Pitch control (vertical view angle)
-A+D: Yaw control (horizontal view angle)
-Q+E: Roll control (rotates view screen)
-Arrow Up + Down: Increase thrust, Decrease thrust
-Spacebar: Stabilize rotation and Decelerate
+* Control your spaceship with the keyboard, using these keys:
+* W+S: Pitch control (vertical view angle)
+* A+D: Yaw control (horizontal view angle)
+* Q+E: Roll control (rotates view screen)
+* Arrow Up + Down: Increase thrust, Decrease thrust
+* Spacebar: Stabilize rotation and Decelerate
