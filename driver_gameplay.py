@@ -44,6 +44,14 @@ class Gameplay(Driver):
         self.starfield.display(screen)
         self.cockpit.display(screen)
 
+    def command(self, command):
+        result = super().command(command)
+        if(command is COMMAND_TIME_SCALE_INCREASE):
+            self.game.time_scale *= 10
+        if(command is COMMAND_TIME_SCALE_DECREASE):
+            self.game.time_scale /= 10
+        return result
+
 
 # = Starfield Screen Definition ===============================================
 
@@ -368,6 +376,7 @@ class Cockpit(Driver):
         # display_string += ' '*(22-len(display_string))
         # screen.addstr(21, 2, display_string, curses.A_BOLD)
         # display_string += ' '*(21-len(display_string))
+        screen.addstr(1, 1, F'Tx{math.ceil(self.game.time_scale/TIME_GAME_TICK)}', curses.A_BOLD)
 
     # - HUD Graphic ----------------------------------
     hud = [

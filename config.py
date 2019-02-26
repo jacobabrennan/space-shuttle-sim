@@ -41,6 +41,8 @@ COMMAND_FORWARD = 64
 COMMAND_BACK = 128
 COMMAND_PRIMARY = 256
 COMMAND_STABILIZE = 512
+COMMAND_TIME_SCALE_INCREASE = 1024
+COMMAND_TIME_SCALE_DECREASE = 2048
 
 # - Player Vehicle Metrics -----------------------
 SHIP_TURNING_ANGLE = math.pi / 360
@@ -52,7 +54,7 @@ TIME_GAME_TICK = 1/30  # Delay between game loop iterations, in seconds
 # Really really important stuff
 GRAVITATIONAL_CONSTANT = 6.674e-11
 # Measures
-TICK_SECONDS = TIME_GAME_TICK * 60 * 60 * 24
+TICK_SECONDS = TIME_GAME_TICK # * 60 * 60 * 24
 KILO = 1000
 MEGA = 1000*KILO
 GIGA = 1000*MEGA

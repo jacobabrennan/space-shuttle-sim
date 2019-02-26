@@ -39,6 +39,6 @@ class Particle:
         self.mass = mass
         self.label = None
 
-    def take_turn(self, game_time):
+    def take_turn(self, time_interval):
         """Provides a hook for code to execute every game loop iteration."""
         pass

@@ -45,8 +45,8 @@ class Vehicle(Particle):
         self.thrust_display = [0, 0, 0]
         self.main_thruster_output = 0
         self.stabilizing = False
-        the_game = game.get_game()
-        the_game.vehicles.append(self)
+        self.game = game.get_game()
+        self.game.vehicles.append(self)
 
     # - Player Controls ------------------------------
     def player_control(self, command):
@@ -74,10 +74,10 @@ class Vehicle(Particle):
             self.roll(-R)
         if(command & COMMAND_FORWARD):
             self.stabilizing = False
-            self.increase_thrust(1000*self.mass)
+            self.increase_thrust(10000*self.mass)
         if(command & COMMAND_BACK):
             self.stabilizing = False
-            self.increase_thrust(-1000*self.mass)
+            self.increase_thrust(-10000*self.mass)
         if(command & COMMAND_STABILIZE):
             self.stabilizing = True
 
@@ -172,8 +172,8 @@ class Vehicle(Particle):
                 self.velocity = self.bearing
                 thrust[3] = 0
             else:
-                thrust[3] = -(speed) * self.mass
-                thrust[3] /= TICK_SECONDS
+                thrust[3] = -(speed*self.mass)
+                thrust[3] /= self.game.time_scale / TIME_GAME_TICK
         self.main_thruster_output = thrust[3]
 
     # - Instant bearing and velocity adjustment ------
@@ -218,14 +218,14 @@ class Vehicle(Particle):
         )
 
     # - Behavior Over Time ---------------------------
-    def take_turn(self, game_time):
+    def take_turn(self, time_interval):
         """Determines how the vehicle behaves every game loop iteration."""
         # Stabilize
         if(self.stabilizing):
             self.stabilize()
         # Apply Thrust
         if(self.main_thruster_output):
-            self.thrust(self.main_thruster_output, game_time)
+            self.thrust(self.main_thruster_output, time_interval)
         # Apply rotations
         if(self.angular_velocity[0]):
             self.adjust_pitch(self.angular_velocity[0])
@@ -234,7 +234,8 @@ class Vehicle(Particle):
         if(self.angular_velocity[2]):
             self.adjust_roll(self.angular_velocity[2])
         # Apply translations
-        self.position = vector_addition(self.position, self.velocity)
+        scaled_velocity = scale_vector(self.velocity, self.game.time_scale*TIME_GAME_TICK)
+        self.position = vector_addition(self.position, scaled_velocity)
         # Decay thrust_display
         _x = self.thrust_display[0]
         _y = self.thrust_display[1]

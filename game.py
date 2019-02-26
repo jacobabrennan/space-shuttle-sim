@@ -53,6 +53,7 @@ class Game:
         super().__init__()
         self.time = None
         self.ship = None
+        self.time_scale = TICK_SECONDS
         # Setup thread for game loop
         the_client = client.get_client()
 
@@ -89,10 +90,10 @@ class Game:
         S.player_control(player_command)
         # Move all particles
         for particle in self.particles:
-            particle.take_turn(self.time)
+            particle.take_turn(self.time_scale)
             if(particle.mass):
                 for vehicle in self.vehicles:
-                    vehicle.feel_gravity(particle, TICK_SECONDS)
+                    vehicle.feel_gravity(particle, self.time_scale)
 
     def start(self):
         """
