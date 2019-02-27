@@ -74,10 +74,16 @@ class Vehicle(Particle):
             self.roll(-R)
         if(command & COMMAND_FORWARD):
             self.stabilizing = False
-            self.increase_thrust(10000*self.mass)
+            thrust_change = SHUTTLE_THRUST_MAX/10
+            if(abs(self.main_thruster_output) < thrust_change):
+                self.main_thruster_output = 0
+            self.increase_thrust(thrust_change)
         if(command & COMMAND_BACK):
             self.stabilizing = False
-            self.increase_thrust(-10000*self.mass)
+            thrust_change = SHUTTLE_THRUST_MAX/10
+            if(abs(self.main_thruster_output) < thrust_change):
+                self.main_thruster_output = 0
+            self.increase_thrust(-thrust_change)
         if(command & COMMAND_STABILIZE):
             self.stabilizing = True
 
@@ -85,6 +91,11 @@ class Vehicle(Particle):
     def increase_thrust(self, force):
         """Adjusts the current (ongoing) output of the main thrusters."""
         self.main_thruster_output += force
+        if(abs(self.main_thruster_output) > SHUTTLE_THRUST_MAX):
+            self.main_thruster_output = math.copysign(
+                SHUTTLE_THRUST_MAX,
+                self.main_thruster_output,
+            )
 
     def pitch(self, radians):
         """Adjusts angular velocity about the X/lateral axis."""
@@ -121,23 +132,11 @@ class Vehicle(Particle):
 
     def stabilize(self):
         """
-        Adjusts orientation toward bearing, and then reduces velocity.
-        Used to eliminate precession and to bring the vehicle to a stop.
+        Stabilizes vehicle by brining velocity and angular velocity to Zero.
         """
+        # Turn off main thruster (stop increasing velocity)
         self.main_thruster_output = 0
-        starboard = vector_product(self.bearing, self.attitude)
-        axes = (starboard, self.attitude, self.bearing)
-        velocity_vector = transform_coordinate_system(
-            self.velocity, (0, 0, 0), axes,
-        )
-        velocity_magnitude = magnitude(velocity_vector)
-        if(velocity_magnitude):
-            unit_velocity_vector = unit_vector(velocity_vector)
-        else:
-            unit_velocity_vector = self.bearing
-        azimuth = math.atan2(velocity_vector[0], velocity_vector[2])
-        altitude = math.asin(unit_velocity_vector[1])
-        #
+        # Stabilize angular velocity
         thrust = [0, 0, 0, 0]
         _x = self.angular_velocity[0]
         _y = self.angular_velocity[1]
@@ -145,49 +144,28 @@ class Vehicle(Particle):
         stable = True
         if(abs(_x) < SHIP_TURNING_ANGLE):
             _x = 0
-            self.adjust_pitch(altitude)
         else:
             stable = False
-            thrust[0] = (altitude-_x)*0.5
+            thrust[0] = (-_x)*0.5
         if(abs(_y) < SHIP_TURNING_ANGLE):
             _y = 0
-            self.adjust_yaw(-azimuth)
         else:
             stable = False
-            thrust[1] = -(azimuth+_y)*0.5
+            thrust[1] = -(_y)*0.5
         if(abs(_x) < SHIP_TURNING_ANGLE):
             _z = 0
         else:
             stable = False
             thrust[2] = -_z/2
+        if(stable):
+            self.stabilizing = False
         self.angular_velocity = (_x, _y, _z)
-        #
         self.pitch(thrust[0])
         self.yaw(thrust[1])
         self.roll(thrust[2])
-        if(stable):
-            speed = scalar_product(self.velocity, self.bearing)
-            if(velocity_magnitude < 100):
-                stabilizing = False
-                self.velocity = self.bearing
-                thrust[3] = 0
-            else:
-                thrust[3] = -(speed*self.mass)
-                thrust[3] /= self.game.time_scale / TIME_GAME_TICK
-        self.main_thruster_output = thrust[3]
-
-    # - Instant bearing and velocity adjustment ------
-    def thrust(self, force, time_interval):
-        """
-        Changes instantaneous velocity by Accelerating the vehicle along its
-        bearing vector. Use negative force for slowing down and reverse.
-        """
-        # F = ma
-        # a = v/t
-        A = force/self.mass
-        V = A * time_interval
-        V = scale_vector(self.bearing, V)
-        self.velocity = vector_addition(self.velocity, V)
+        # Halt movement completely.
+        # This is a cheat, but the game is unplayable otherwise.
+        self.velocity = (0, 0, 0)
 
     def adjust_pitch(self, radians):
         """Adjusts bearing & attitude by rotating about the X/lateral axis."""
@@ -225,7 +203,9 @@ class Vehicle(Particle):
             self.stabilize()
         # Apply Thrust
         if(self.main_thruster_output):
-            self.thrust(self.main_thruster_output, time_interval)
+            f_thrust = scale_vector(self.bearing, self.main_thruster_output)
+            self.apply_force(f_thrust, time_interval)
+            # self.thrust(self.main_thruster_output, time_interval)
         # Apply rotations
         if(self.angular_velocity[0]):
             self.adjust_pitch(self.angular_velocity[0])
@@ -234,7 +214,7 @@ class Vehicle(Particle):
         if(self.angular_velocity[2]):
             self.adjust_roll(self.angular_velocity[2])
         # Apply translations
-        scaled_velocity = scale_vector(self.velocity, self.game.time_scale*TIME_GAME_TICK)
+        scaled_velocity = scale_vector(self.velocity, time_interval)
         self.position = vector_addition(self.position, scaled_velocity)
         # Decay thrust_display
         _x = self.thrust_display[0]
@@ -245,24 +225,28 @@ class Vehicle(Particle):
         self.thrust_display[2] = math.copysign(min(3, max(0, abs(_z)-0.2)), _z)
 
     # - Gravity --------------------------------------
+    def apply_force(self, force_vector, time_interval):
+        """Applies a force in newtons over a time interval in seconds."""
+        # F = MA
+        # A = V/T
+        V = scale_vector(force_vector, time_interval/self.mass)
+        self.velocity = vector_addition(self.velocity, V)
+
     def feel_gravity(self, particle, time_interval):
         """Applies gravitational force to the vehicle over the given time."""
+        # If either particle has no mass, do nothing
         if(not self.mass or self is particle):
             return
-        # Fgrav = G * ( (m1*m2) / (r**2) )
-        # F = ma
-        # a = v/t
+        # Calculate the force of gravity as a vector
+        # Note: f_grav = G * ( (m1*m2) / (r**2) )
+        delta_position = vector_between(self.position, particle.position)
+        distance = magnitude(delta_position)
         f_grav = GRAVITATIONAL_CONSTANT * (
             (self.mass*particle.mass) /
-            (distance(self.position, particle.position)**2)
+            (distance**2)
         )
-        A = f_grav/self.mass
-        V = A * time_interval
-        V = scale_vector(
-            unit_vector(vector_between(self.position, particle.position)),
-            V,
-        )
-        # self.velocity = vector_addition(self.velocity, V)
+        force_vector = scale_vector(unit_vector(delta_position), f_grav)
+        self.apply_force(force_vector, time_interval)
         # Set gravitational reference
         if(
             not self.gravitational_reference or

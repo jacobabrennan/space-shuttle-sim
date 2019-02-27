@@ -22,4 +22,5 @@ Control your spaceship with the keyboard, using these keys:
 * A+D: Yaw control (horizontal view angle)
 * Q+E: Roll control (rotates view screen)
 * Arrow Up + Down: Increase thrust, Decrease thrust
+* Arrow Right + Left: Increase / Decrease time scale
 * Spacebar: Stabilize rotation and Decelerate

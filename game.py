@@ -53,7 +53,7 @@ class Game:
         super().__init__()
         self.time = None
         self.ship = None
-        self.time_scale = TICK_SECONDS
+        self.time_scale = 1
         # Setup thread for game loop
         the_client = client.get_client()
 
@@ -82,18 +82,20 @@ class Game:
         to controllable game objects, and instruct each game object to perform
         its own turn taking behavior.
         """
+        # Handle time management
         if(self.time is None):
             return
-        self.time += 1
+        time_interval = self.time_scale * TIME_GAME_TICK
+        self.time += time_interval
         # Handle ship controls (player commands)
         S = self.ship
         S.player_control(player_command)
         # Move all particles
         for particle in self.particles:
-            particle.take_turn(self.time_scale)
+            particle.take_turn(time_interval)
             if(particle.mass):
                 for vehicle in self.vehicles:
-                    vehicle.feel_gravity(particle, self.time_scale)
+                    vehicle.feel_gravity(particle, time_interval)
 
     def start(self):
         """
@@ -106,7 +108,7 @@ class Game:
         self.particles = []
         self.vehicles = []
         self.ship = Vehicle()
-        self.ship.mass = 74842
+        self.ship.mass = SHUTTLE_MASS
         self.ship.bearing = (0, 0, 1)
         self.ship.position = (AU, 0, 1+(6371*KILO)+(384399*KILO)/2)
         self.particles.append(self.ship)
@@ -186,3 +188,13 @@ class Game:
         #     )
         #     new_particle = Particle(position, random()*100*KILO)
         #     self.particles.append(new_particle)
+
+    def scale_time(self, time_scale):
+        """Set the game's time scale to the specified multiple of real time."""
+        # Bound scaling factor between real time and e+6, roughly 1s = 11.5days
+        new_time_scale = time_scale
+        if(new_time_scale < 1):
+            new_time_scale = 1
+        elif(new_time_scale > 1000000):
+            new_time_scale = 1000000
+        self.time_scale = new_time_scale

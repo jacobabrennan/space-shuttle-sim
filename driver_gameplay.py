@@ -47,9 +47,9 @@ class Gameplay(Driver):
     def command(self, command):
         result = super().command(command)
         if(command is COMMAND_TIME_SCALE_INCREASE):
-            self.game.time_scale *= 10
+            self.game.scale_time(self.game.time_scale * 10)
         if(command is COMMAND_TIME_SCALE_DECREASE):
-            self.game.time_scale /= 10
+            self.game.scale_time(self.game.time_scale / 10)
         return result
 
 
@@ -247,7 +247,7 @@ class Starfield(Driver):
                 if(sprite_sides):
                     sprite = self.sprite_sides[sprite_sides]
                     # if(sprite_sides == 15): draw some texture
-                    self.draw_sprite(screen, pos_x, pos_y, sprite)
+                    self.draw_sprite(screen, pos_x, pos_y, sprite, curses.A_BOLD)
 
     sprite_sides = [
         '@', '"', '_', '+',
@@ -296,8 +296,7 @@ class Cockpit(Driver):
             thrust += ' '*(7-len(thrust))
             screen.addstr(16+axis, 71, thrust, curses.A_BOLD)
         # Thrust Main Thruster Output
-        t_width = ship.main_thruster_output/(MEGA*1000)
-        t_width = math.atan(t_width) / (math.pi/2)
+        t_width = ship.main_thruster_output / SHUTTLE_THRUST_MAX
         sprite = '«'
         if(t_width < 0):
             sprite = '»'
@@ -308,10 +307,6 @@ class Cockpit(Driver):
         thrust_string = sprite * math.ceil(t_width*13)
         thrust_string = ' '*(13-len(thrust_string))+thrust_string+':'
         screen.addstr(17, 57, thrust_string, curses.A_BOLD)
-        # thrust_string = sprite * math.ceil(t_width*14)
-        # thrust_string = ' '*(14-len(thrust_string))+thrust_string+':'
-        # screen.addstr(18, 56, thrust_string, curses.A_BOLD)
-        # Velocity vector (in terms of direction facing)
         screen.addstr(19, 61, '  Bearing ', curses.A_BOLD)
         velocity_vector = transform_coordinate_system(
             ship.velocity, (0, 0, 0), axes,
@@ -333,7 +328,7 @@ class Cockpit(Driver):
         display_string += ' '*(16-len(display_string))
         screen.addstr(21, 62, display_string, curses.A_BOLD)
         # Display Gravitational Reference Info
-        screen.addstr(18, 3, 'Reference-Frame', curses.A_BOLD)
+        screen.addstr(15, 3, 'Reference-Frame', curses.A_BOLD)
         if(not ship.gravitational_reference):
             return
         reference_point = ship.gravitational_reference[0]
@@ -345,7 +340,7 @@ class Cockpit(Driver):
         # G.Ref. Name
         reference_name = ' '+(reference_point.label or "Unknown Body")
         reference_name += ' '*(20-len(reference_name))
-        screen.addstr(19, 2, reference_name, curses.A_BOLD)
+        screen.addstr(16, 2, reference_name, curses.A_BOLD)
         # G.Ref. Distance
         reference_distance = magnitude(reference_vector) - reference_point.radius
         if(reference_distance >= AU*10000):
@@ -358,7 +353,7 @@ class Cockpit(Driver):
             reference_distance /= 1000
             display_string = ' D: {:.3e} km'.format(reference_distance)
         display_string += ' '*(22-len(display_string))
-        screen.addstr(21, 2, display_string, curses.A_BOLD)
+        screen.addstr(18, 2, display_string, curses.A_BOLD)
         # G.Ref. Azimuth and Altitude (vector to reference)
         if(reference_distance):
             reference_vector = unit_vector(reference_vector)
@@ -369,14 +364,35 @@ class Cockpit(Driver):
             altitude = 0
         display_string = F' V: {int(azimuth)}° {int(altitude)}°'
         display_string += ' '*(21-len(display_string))
-        screen.addstr(20, 2, display_string, curses.A_BOLD)
-        # # Display Mission Time (days passed)
-        # display_string =
-        #  F' T: {int((self.game.time*TICK_SECONDS)/(60*60*24))} days'
-        # display_string += ' '*(22-len(display_string))
-        # screen.addstr(21, 2, display_string, curses.A_BOLD)
-        # display_string += ' '*(21-len(display_string))
-        screen.addstr(1, 1, F'Tx{math.ceil(self.game.time_scale/TIME_GAME_TICK)}', curses.A_BOLD)
+        screen.addstr(17, 2, display_string, curses.A_BOLD)
+        # Display Mission Time and Time Scale factor
+        display_string = F' Scale {math.ceil(self.game.time_scale)}'.ljust(15)
+        screen.addstr(20, 4, display_string, curses.A_BOLD)
+        time_components = self.game.time
+        if(self.game.time_scale <= 10000):
+            seconds = time_components % MINUTE
+            time_components -= seconds
+            seconds = int(seconds/SECOND)
+            minutes = time_components % HOUR
+            time_components -= minutes
+            minutes = int(minutes/MINUTE)
+            hours = time_components % DAY
+            time_components -= hours
+            hours = int(hours/HOUR)
+            days = time_components % YEAR
+            time_components -= days
+            days = int(days/DAY)
+            display_string = ' {:03d}, {:02d}:{:02d}:{:02d}'
+            display_string = display_string.format(days, hours, minutes, seconds)
+            display_string = display_string.ljust(15)
+            screen.addstr(21, 4, display_string, curses.A_BOLD)
+        else:
+            days = time_components % YEAR
+            time_components -= days
+            days = int(days/DAY)
+            years = int(time_components/YEAR)
+            display_string = F' {years}, {days:03d}'.ljust(15)
+            screen.addstr(21, 4, display_string, curses.A_BOLD)
 
     # - HUD Graphic ----------------------------------
     hud = [
@@ -395,13 +411,13 @@ class Cockpit(Driver):
         '          \ \                                                      / /          ',
         '           \ \          \                              /          / /           ',
         '------------\-------------\                          /-------------/------------',
-        '             \             \                        /     x-------------------+ ',
-        '              \             \______________________/     /                    | ',
-        '               \                                        /                     | ',
-        ' +-------------------x                                  \______________       | ',
-        ' |                    \                                     /          \______| ',
-        ' |                     \                                    \                 | ',
-        ' |                      \                                    \                | ',
-        ' |______________________/                                     \_______________| ',
+        ' +-------------------x     \                        /     x-------------------+ ',
+        ' |                    \     \______________________/     /                    | ',
+        ' |                     \                                /                     | ',
+        ' |                      \                               \______________       | ',
+        ' |______________________/                                   /          \______| ',
+        '   |               \                                        \                 | ',
+        '   |               /                                         \                | ',
+        '   |______________/                                           \_______________| ',
         '                                                                                ',
     ]

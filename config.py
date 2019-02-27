@@ -44,8 +44,6 @@ COMMAND_STABILIZE = 512
 COMMAND_TIME_SCALE_INCREASE = 1024
 COMMAND_TIME_SCALE_DECREASE = 2048
 
-# - Player Vehicle Metrics -----------------------
-SHIP_TURNING_ANGLE = math.pi / 360
 
 # - Timing and delays ----------------------------
 TIME_GAME_TICK = 1/30  # Delay between game loop iterations, in seconds
@@ -54,14 +52,25 @@ TIME_GAME_TICK = 1/30  # Delay between game loop iterations, in seconds
 # Really really important stuff
 GRAVITATIONAL_CONSTANT = 6.674e-11
 # Measures
-TICK_SECONDS = TIME_GAME_TICK # * 60 * 60 * 24
 KILO = 1000
 MEGA = 1000*KILO
 GIGA = 1000*MEGA
 TERA = 1000*GIGA
+# Distances
 AU = 149597870700
 LY = 9.46*TERA*KILO
 PARSEC = 30856775814913700
+# Time
+SECOND = TIME_GAME_TICK/TIME_GAME_TICK
+MINUTE = 60 * SECOND
+HOUR = 60 * MINUTE
+DAY = 24 * HOUR
+YEAR = 365 * DAY
+
+# - Player Vehicle Metrics -----------------------
+SHIP_TURNING_ANGLE = math.pi / 360
+SHUTTLE_THRUST_MAX = 2279*KILO
+SHUTTLE_MASS = 74842
 
 # - Messages and Strings -------------------------
 MESSAGE_SCREEN_SIZE_CONDITION_NOT_MET = (
