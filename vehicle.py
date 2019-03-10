@@ -101,6 +101,12 @@ class Vehicle(Particle):
         """Adjusts angular velocity about the X/lateral axis."""
         if(not radians):
             return
+        # Snap to 0 if thrusting opposite spin near 0
+        current_vel = self.angular_velocity[0]
+        if current_vel * radians < 0:
+            if abs(current_vel) < abs(radians):
+                radians = -current_vel
+        #
         self.angular_velocity = (
             self.angular_velocity[0]+radians,
             self.angular_velocity[1],
@@ -112,6 +118,12 @@ class Vehicle(Particle):
         """Adjusts angular velocity about the Y/vertical axis."""
         if(not radians):
             return
+        # Snap to 0 if thrusting opposite spin near 0
+        current_vel = self.angular_velocity[1]
+        if current_vel * radians < 0:
+            if abs(current_vel) < abs(radians):
+                radians = -current_vel
+        #
         self.angular_velocity = (
             self.angular_velocity[0],
             self.angular_velocity[1]+radians,
@@ -123,6 +135,12 @@ class Vehicle(Particle):
         """Adjusts angular velocity about the Z/forward axis."""
         if(not radians):
             return
+        # Snap to 0 if thrusting opposite spin near 0
+        current_vel = self.angular_velocity[2]
+        if current_vel * radians < 0:
+            if abs(current_vel) < abs(radians):
+                radians = -current_vel
+        #
         self.angular_velocity = (
             self.angular_velocity[0],
             self.angular_velocity[1],
@@ -174,8 +192,8 @@ class Vehicle(Particle):
             scale_vector(self.attitude, math.sin(radians)),
         )
         self.attitude = vector_addition(
-            scale_vector(self.bearing, math.cos(radians+math.pi/2)),
-            scale_vector(self.attitude, math.sin(radians+math.pi/2)),
+            scale_vector(self.bearing, math.cos(radians+RIGHT)),
+            scale_vector(self.attitude, math.sin(radians+RIGHT)),
         )
         self.bearing = new_bearing
 
@@ -183,16 +201,16 @@ class Vehicle(Particle):
         """Adjusts bearing & attitude by rotating about the Y/vertical axis."""
         starboard = vector_product(self.bearing, self.attitude)
         self.bearing = vector_addition(
-            scale_vector(starboard, math.cos(radians+math.pi/2)),
-            scale_vector(self.bearing, math.sin(radians+math.pi/2)),
+            scale_vector(starboard, math.cos(radians+RIGHT)),
+            scale_vector(self.bearing, math.sin(radians+RIGHT)),
         )
 
     def adjust_roll(self, radians):
         """Adjusts bearing & attitude by rotating about the Z/forward axis."""
         starboard = vector_product(self.bearing, self.attitude)
         self.attitude = vector_addition(
-            scale_vector(starboard, math.cos(radians+math.pi/2)),
-            scale_vector(self.attitude, math.sin(radians+math.pi/2)),
+            scale_vector(starboard, math.cos(radians+RIGHT)),
+            scale_vector(self.attitude, math.sin(radians+RIGHT)),
         )
 
     # - Behavior Over Time ---------------------------

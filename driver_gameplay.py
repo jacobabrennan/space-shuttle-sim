@@ -121,7 +121,7 @@ class Starfield(Driver):
             math.atan2(relative_position[1], relative_position[0]),
             absolute_distance,
         )
-        angular_radius = math.pi/2 - math.acos(min(1, particle.radius/absolute_distance))
+        angular_radius = RIGHT - math.acos(min(1, particle.radius/absolute_distance))
         return (polar_coordinates, angular_radius, particle)
 
     def draw_disc(self, screen, disc):
@@ -156,6 +156,9 @@ class Starfield(Driver):
         char_x = pixel_x / CHARACTER_WIDTH
         char_y = pixel_y / CHARACTER_HEIGHT
         close = (depth < 2*AU)
+        # Calculate apparent magnitude
+        brightness = particle.magnitude + 2.5*math.log10( ((depth/PARSEC)/10)**2 )
+        #
         sprite = '·'
         if(pixel_radius < 1):
             sprite = '·'
@@ -169,7 +172,7 @@ class Starfield(Driver):
             sprite = '@'
             # °*+@Oo©®
         #
-        if(close):
+        if(brightness < 2):
             self.draw_sprite(screen, char_x, char_y, sprite, curses.A_BOLD)
         else:
             self.draw_sprite(screen, char_x, char_y, sprite, curses.A_DIM)
@@ -366,7 +369,7 @@ class Cockpit(Driver):
         display_string += ' '*(21-len(display_string))
         screen.addstr(17, 2, display_string, curses.A_BOLD)
         # Display Mission Time and Time Scale factor
-        display_string = F' Scale {math.ceil(self.game.time_scale)}'.ljust(15)
+        display_string = F' Time ×{math.ceil(self.game.time_scale)}'.ljust(15)
         screen.addstr(20, 4, display_string, curses.A_BOLD)
         time_components = self.game.time
         if(self.game.time_scale <= 10000):

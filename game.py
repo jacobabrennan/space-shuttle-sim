@@ -23,6 +23,7 @@ from vector3d import *
 import client
 from particle import Particle
 from vehicle import Vehicle
+from cosmos import populate_stars
 
 # - Game access function -------------------------
 game = None
@@ -109,10 +110,16 @@ class Game:
         self.vehicles = []
         self.ship = Vehicle()
         self.ship.mass = SHUTTLE_MASS
-        self.ship.bearing = (0, 0, 1)
-        self.ship.position = (AU, 0, 1+(6371*KILO)+(384399*KILO)/2)
+        self.ship.bearing = (1, 0, 0)
+        self.ship.attitude = (0, -math.cos(RIGHT), -math.sin(RIGHT), 0)
+        self.ship.position = (AU, 0, 403*KILO+(6371*KILO)+(384399*KILO)/2)
+        self.ship.velocity = (7.7*KILO, 0, 0)
+        self.ship.angular_velocity = (math.pi/835, 0, 0)  #OK!
         self.particles.append(self.ship)
+        self.time_scale = 100
         # self.ship.velocity = (0, 0, 0)#AU/10000)#/KILO)
+        # Cosmos
+        self.particles.extend(populate_stars())
         # Milky Way
         for I in range(0, 200):
             # 63* inclination of milkyway
@@ -136,14 +143,14 @@ class Game:
             new_particle = Particle(position, random()*695000*KILO)
             self.particles.append(new_particle)
         # Solar neighborhood
-        for I in range(0, 200):
-            position = (
-                (random()-1/2)*200*LY,
-                (random()-1/2)*200*LY,
-                (random()-1/2)*200*LY,
-            )
-            new_particle = Particle(position, random()*695000*KILO)
-            self.particles.append(new_particle)
+        # for I in range(0, 200):
+        #     position = (
+        #         (random()-1/2)*200*LY,
+        #         (random()-1/2)*200*LY,
+        #         (random()-1/2)*200*LY,
+        #     )
+        #     new_particle = Particle(position, random()*695000*KILO)
+        #     self.particles.append(new_particle)
         # Sun
         new_particle = Particle((0, 0, 0), 695000*KILO, mass=1.9885e+30)
         self.particles.append(new_particle)
@@ -159,7 +166,15 @@ class Game:
         self.particles.append(new_particle)
         new_particle.label = 'Mercury'
         # Venus
-        pass
+        theta = random()*math.pi*2
+        pos_x = math.cos(theta)
+        pos_y = math.sin(theta)
+        new_particle = Particle(
+            (pos_x*0.723332*AU, 0, pos_y*0.723332*AU),
+            6051.8*KILO,
+            mass=4.8675e+24)
+        self.particles.append(new_particle)
+        new_particle.label = 'Venus'
         # Earth
         new_particle = Particle(
             (AU, 0, (384399*KILO)/2),
@@ -174,20 +189,69 @@ class Game:
             1737.1*KILO,
             mass=7.342e+22)
         self.particles.append(new_particle)
+        new_particle.label = 'Luna'
         # Mars
-        pass
+        theta = random()*math.pi*2
+        pos_x = math.cos(theta)
+        pos_y = math.sin(theta)
+        new_particle = Particle(
+            (pos_x*1.523679*AU, 0, pos_y*1.523679*AU),
+            3389.5*KILO,
+            mass=6.4171e+23)
+        self.particles.append(new_particle)
+        new_particle.label = 'Mars'
         # Asteroid Belt
         # for I in range(0, 200):
         #     theta = random()*math.pi*2
         #     pos_x = math.cos(theta)
         #     pos_y = math.sin(theta)
         #     position = (
-        #         pos_x * 2*AU + random()*1*AU,
+        #         pos_x * (2*AU + random()*1*AU),
         #         (random()-1/2) * AU/2,
-        #         pos_y * 2*AU + random()*1*AU,
+        #         pos_y * (2*AU + random()*1*AU),
         #     )
         #     new_particle = Particle(position, random()*100*KILO)
         #     self.particles.append(new_particle)
+        # Jupiter
+        theta = random()*math.pi*2
+        pos_x = math.cos(theta)
+        pos_y = math.sin(theta)
+        new_particle = Particle(
+            (pos_x*5.2044*AU, 0, pos_y*5.2044*AU),
+            69911*KILO,
+            mass=1.8982e+27)
+        self.particles.append(new_particle)
+        new_particle.label = 'Jupiter'
+        # Saturn
+        theta = random()*math.pi*2
+        pos_x = math.cos(theta)
+        pos_y = math.sin(theta)
+        new_particle = Particle(
+            (pos_x*9.5826*AU, 0, pos_y*9.5826*AU),
+            58232*KILO,
+            mass=5.6834e+26)
+        self.particles.append(new_particle)
+        new_particle.label = 'Saturn'
+        # Uranus
+        theta = random()*math.pi*2
+        pos_x = math.cos(theta)
+        pos_y = math.sin(theta)
+        new_particle = Particle(
+            (pos_x*19.2184*AU, 0, pos_y*19.2184*AU),
+            25362*KILO,
+            mass=8.6810e+25)
+        self.particles.append(new_particle)
+        new_particle.label = 'Uranus'
+        # Neptune
+        theta = random()*math.pi*2
+        pos_x = math.cos(theta)
+        pos_y = math.sin(theta)
+        new_particle = Particle(
+            (pos_x*30.11*AU, 0, pos_y*30.11*AU),
+            24622*KILO,
+            mass=1.02413e+26)
+        self.particles.append(new_particle)
+        new_particle.label = 'Neptune'
 
     def scale_time(self, time_scale):
         """Set the game's time scale to the specified multiple of real time."""
@@ -195,6 +259,6 @@ class Game:
         new_time_scale = time_scale
         if(new_time_scale < 1):
             new_time_scale = 1
-        elif(new_time_scale > 1000000):
-            new_time_scale = 1000000
+        elif(new_time_scale > 10000000):
+            new_time_scale = 10000000
         self.time_scale = new_time_scale

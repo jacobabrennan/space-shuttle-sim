@@ -47,6 +47,7 @@ class Title(Driver):
     def new_game(self):
         """Starts a new game and transfers focus to the gameplay driver."""
         the_client = client.get_client()
+        the_client.key_clear()
         the_client.focus(Gameplay())
         the_game = game.get_game()
         the_game.start()

@@ -30,7 +30,7 @@ class Particle:
     against the backdrop of stars. This behavior may soon change.
     """
 
-    def __init__(self, position=(0, 0, 0), radius=1, mass=0):
+    def __init__(self, position=(0, 0, 0), radius=1, mass=0, magnitude=5):
         if(position):
             self.position = tuple(position)
         else:
@@ -38,6 +38,7 @@ class Particle:
         self.radius = radius
         self.mass = mass
         self.label = None
+        self.magnitude = magnitude
 
     def take_turn(self, time_interval):
         """Provides a hook for code to execute every game loop iteration."""
