@@ -15,6 +15,12 @@ $ py main.py
 
 You must have Python version 3 install and configured properly for your system.
 
+If you are running the game on Windows, you must also install the windows-curses library. The library can be installed via Pip using the following command:
+
+```
+python -m pip install windows-curses
+```
+
 ### Controls
 
 Control your spaceship with the keyboard, using these keys:
